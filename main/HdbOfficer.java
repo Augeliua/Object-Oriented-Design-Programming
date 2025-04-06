@@ -17,7 +17,7 @@ public class HdbOfficer extends User{
 		
 	}
 	
-	public void viewProjectDetails(Project project)
+	public Project viewProjectDetails(Project project)
 	{
 		System.out.println("=== PROJECT DETAILS ===");
 	    System.out.println("Project ID: " + project.getProjectID());
