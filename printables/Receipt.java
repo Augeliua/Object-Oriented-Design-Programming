@@ -3,20 +3,42 @@ package project;
 package project;
 
 public class Receipt {
+	private static int receiptCounter = 0;
+	
 	private String receiptID;
-	private Applicant applicantDetails;
-	private Project projectDetails;
+	private String name;
+	private String nric;
+	private int age;
+	private String maritalStatus;
+	private String projectID;
+    private String neighborhood;
+    private double pricePerFlat;
 	private FlatType flatType;
 	private String bookingDate;
 	
-	public Receipt(String id, Applicant a, Project p, FlatType f, String date)
+	public Receipt() 
+	{
+        this.receiptID = generateNextReceiptID();
+    }
+	public Receipt(String id, String name, String nric, int age, String maritalStatus, String projID, String neighborhood, double price, FlatType f, String date)
 	{
 		this.receiptID = id;
-		this.applicantDetails = a;
-		this.projectDetails = p;
+		this.name = name;
+		this.nric = nric;
+		this.age = age;
+		this.maritalStatus = maritalStatus;
+		this.projectID = projID;
+        this.neighborhood = neighborhood;
+        this.pricePerFlat = price;
 		this.flatType = f;
 		this.bookingDate = date;
 	}
+	
+	private synchronized String generateNextReceiptID() 
+	{
+        receiptCounter++;
+        return String.format("RCPT-%05d", receiptCounter);
+    }
 	
 	public String getReceiptID()
 	{
@@ -28,25 +50,65 @@ public class Receipt {
         this.receiptID = receiptId;
     }
 	
-	public Applicant getApplicantDetails()
+	public String getName() 
 	{
-		return applicantDetails;
-	}
-	
-	public void setApplicantDetails(Applicant applicantDetails) 
-	{
-        this.applicantDetails = applicantDetails;
+        return name;
     }
 	
-	public Project getProjectDetails()
+	public void setName(String name)
 	{
-		return projectDetails;
+		this.name = name;
 	}
 	
-	public void setProjectDetails(Project projectDetails)
+	public String getNRIC()
 	{
-        this.projectDetails = projectDetails;
-    }
+		return nric;
+	}
+	
+	public void setNRIC(String nric)
+	{
+		this.nric = nric;
+	}
+	
+	public String getMaritalStatus()
+	{
+		return maritalStatus;
+	}
+	
+	public void setMaritalStatus(String maritalStatus)
+	{
+		this.maritalStatus = maritalStatus;
+	}
+	
+	public String getProjectID()
+	{
+		return projectID;
+	}
+	
+	public void setProjectID(String projID)
+	{
+		this.projectID = projID;
+	}
+	
+	public String getNeighborhood()
+	{
+		return neighborhood;
+	}
+	
+	public void setNeighborhood(String neighborhood)
+	{
+		this.neighborhood = neighborhood;
+	}
+	
+	public double returnPricePerFlat()
+	{
+		return pricePerFlat;
+	}
+	
+	public void setPricePerFlat(double price)
+	{
+		this.pricePerFlat = price;
+	}
 	
 	public FlatType getFlatType()
 	{
@@ -72,17 +134,18 @@ public class Receipt {
 		System.out.println("---------------");
 	    System.out.println("Receipt Details");
 	    System.out.println("---------------");
-	    System.out.println("Receipt ID: " + receiptId);
+	    System.out.println("Receipt ID: " + receiptID);
 	        
 	    System.out.println("\nApplicant Information:");
-	    System.out.println("Name: " + applicantDetails.getName());
-	    System.out.println("NRIC: " + applicantDetails.getNRIC());
-	    System.out.println("Age: " + applicantDetails.getAge());
-	    System.out.println("Marital Status: " + applicantDetails.getMaritalStatus());
+	    System.out.println("Name: " + name);
+	    System.out.println("NRIC: " + nric);
+	    System.out.println("Age: " + age);
+	    System.out.println("Marital Status: " + maritalStatus);
 	        
 	    System.out.println("\nProject Information:");
-	    System.out.println("Project Name: " + projectDetails.getProjectName());
-	    System.out.println("Neighborhood: " + projectDetails.getNeighborhood());
+	    System.out.println("Project Name: " + projectID);
+	    System.out.println("Neighborhood: " +neighborhood);
+	    System.out.println("Price per Flat: " + pricePerFlat);
 	        
 	    System.out.println("\nBooking Information:");
 	    System.out.println("Flat Type: " + flatType);
