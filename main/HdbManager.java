@@ -3,255 +3,278 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class HdbManager extends Applicant implements IProjectManagement, IEnquiryManagement {
+public class HDBManager extends Applicant implements IProjectManagement, IEnquiryManagement {
+    // Fields
     private String managerName;
     private List<Project> projectsCreated;
-
+    
     // Constructor
-    public HdbManager(String id, String name, String password, int age, boolean status, String managerName) {
-        super(id, name, password, age, status);
-        this.managerName = managerName;
+    public HDBManager(String id, String name, String email, boolean isActive, int age, boolean isMarried) {
+        super(id, name, email, isActive, age, isMarried);
+        this.managerName = name;
         this.projectsCreated = new ArrayList<>();
     }
-
-    // IProjectManagement implementation
-    @Override
+    
+    // Methods from UML diagram
     public void createProject(Project project) {
-        // Check if manager is already handling a project in an active application period
-        if (isHandlingActiveProject() && isWithinApplicationPeriod(project)) {
-            System.out.println("Cannot create new project. You are already handling a project within an application period.");
+        // Set the manager in charge
+        project.setManagerInCharge(this.managerName);
+        
+        // Check if manager is already handling a project in the same period
+        Date currentDate = new Date();
+        for (Project existingProject : projectsCreated) {
+            if (currentDate.after(existingProject.getApplicationOpenDate()) && 
+                currentDate.before(existingProject.getApplicationCloseDate())) {
+                System.out.println("Error: Manager already handling a project during this application period.");
+                return;
+            }
+        }
+        
+        // Initialize HDB Officer slots
+        project.setAvailableOfficerSlots(10);
+        
+        // Add to projects created
+        projectsCreated.add(project);
+        System.out.println("Project created successfully: " + project.getProjectName());
+    }
+    
+    public void editProject(Project project) {
+        for (int i = 0; i < projectsCreated.size(); i++) {
+            if (projectsCreated.get(i).getProjectID().equals(project.getProjectID())) {
+                projectsCreated.set(i, project);
+                System.out.println("Project updated successfully: " + project.getProjectName());
+                return;
+            }
+        }
+        System.out.println("Project not found.");
+    }
+    
+    public void deleteProject(Project project) {
+        boolean removed = projectsCreated.removeIf(p -> p.getProjectID().equals(project.getProjectID()));
+        if (removed) {
+            System.out.println("Project deleted successfully: " + project.getProjectName());
+        } else {
+            System.out.println("Project not found.");
+        }
+    }
+    
+    public void toggleProjectVisibility(Project project) {
+        for (Project p : projectsCreated) {
+            if (p.getProjectID().equals(project.getProjectID())) {
+                p.setVisible(!p.isVisible());
+                System.out.println("Project visibility toggled to: " + (p.isVisible() ? "Visible" : "Hidden"));
+                return;
+            }
+        }
+        System.out.println("Project not found.");
+    }
+    
+    public List<Project> viewAllProjects() {
+        // Assuming there's a static list of all projects somewhere
+        return ProjectRepository.findAllProjects();
+    }
+    
+    public void approveOfficerRegistration(HdbOfficer officer) {
+        // Find the project the officer is applying for
+        Project targetProject = null;
+        for (Project p : projectsCreated) {
+            if (p.getProjectID().equals(officer.getProjectAssigned().getProjectID())) {
+                targetProject = p;
+                break;
+            }
+        }
+        
+        if (targetProject == null) {
+            System.out.println("Project not found or not managed by this manager.");
             return;
         }
         
-        // Set the manager in charge
-        project.setManagerInCharge(this.getName());
-        projectsCreated.add(project);
-        System.out.println("Project " + project.getProjectID() + " created successfully.");
-    }
-
-    @Override
-    public void editProject(Project project) {
-        int index = findProjectIndex(project);
-        if (index != -1) {
-            projectsCreated.set(index, project);
-            System.out.println("Project " + project.getProjectID() + " updated successfully.");
+        // Check if there are available slots
+        if (targetProject.getAvailableOfficerSlots() > 0) {
+            officer.setRegistrationStatus("APPROVED");
+            targetProject.setAvailableOfficerSlots(targetProject.getAvailableOfficerSlots() - 1);
+            System.out.println("Officer registration approved.");
         } else {
-            System.out.println("Project not found or you don't have permission to edit it.");
+            officer.setRegistrationStatus("REJECTED");
+            System.out.println("Officer registration rejected. No available slots.");
         }
     }
-
-    @Override
-    public void deleteProject(Project project) {
-        int index = findProjectIndex(project);
-        if (index != -1) {
-            projectsCreated.remove(index);
-            System.out.println("Project " + project.getProjectID() + " deleted successfully.");
+    
+    public void approveApplication(Application application) {
+        Project project = application.getProject();
+        String flatType = application.getFlatType();
+        
+        // Check if the project is managed by this manager
+        if (!projectsCreated.contains(project)) {
+            System.out.println("Project not managed by this manager.");
+            return;
+        }
+        
+        // Check if there are available units for the flat type
+        int availableUnits;
+        if ("2-ROOM".equals(flatType)) {
+            availableUnits = project.getRemainingTwoRoomUnits();
+            if (availableUnits > 0) {
+                project.setRemainingTwoRoomUnits(availableUnits - 1);
+                application.setApplicationStatus("APPROVED");
+                System.out.println("Application approved for a 2-ROOM flat.");
+            } else {
+                application.setApplicationStatus("REJECTED");
+                System.out.println("Application rejected. No available 2-ROOM units.");
+            }
+        } else if ("3-ROOM".equals(flatType)) {
+            availableUnits = project.getRemainingThreeRoomUnits();
+            if (availableUnits > 0) {
+                project.setRemainingThreeRoomUnits(availableUnits - 1);
+                application.setApplicationStatus("APPROVED");
+                System.out.println("Application approved for a 3-ROOM flat.");
+            } else {
+                application.setApplicationStatus("REJECTED");
+                System.out.println("Application rejected. No available 3-ROOM units.");
+            }
         } else {
-            System.out.println("Project not found or you don't have permission to delete it.");
+            System.out.println("Invalid flat type specified.");
         }
     }
-
-    @Override
-    public void toggleProjectVisibility(Project project) {
-        int index = findProjectIndex(project);
-        if (index != -1) {
-            project.setVisible(!project.isVisible());
-            projectsCreated.set(index, project);
-            System.out.println("Project " + project.getProjectID() + " visibility toggled to: " + (project.isVisible() ? "Visible" : "Hidden"));
+    
+    public Report generateReport(ReportType reportType) {
+        // Create a new report
+        Report report = new Report();
+        report.setReportType(reportType);
+        
+        // Get all applications for projects managed by this manager
+        List<Application> applications = ApplicationRepository.findAllApplications()
+                .stream()
+                .filter(app -> projectsCreated.contains(app.getProject()))
+                .collect(Collectors.toList());
+        
+        // Apply filters based on report type
+        List<Object> filteredData = new ArrayList<>();
+        if (reportType == ReportType.BY_FLAT_TYPE) {
+            // Group by flat type
+            // Implementation would depend on how you want to structure the report
+            filteredData.addAll(applications);
+        } else if (reportType == ReportType.BY_MARITAL_STATUS) {
+            // Filter by marital status
+            filteredData.addAll(applications.stream()
+                    .filter(app -> app.getApplicant().isMarried())
+                    .collect(Collectors.toList()));
         } else {
-            System.out.println("Project not found or you don't have permission to toggle its visibility.");
+            // Default - all bookings
+            filteredData.addAll(applications);
         }
+        
+        report.setItems(filteredData);
+        return report;
+    }
+    
+    // Methods from IProjectManagement interface
+    @Override
+    public void createProject(String projectName, String neighborhood, List<String> flatTypes, 
+                             int twoRoomUnits, int threeRoomUnits, Date openDate, Date closeDate) {
+        Project project = new Project();
+        project.setProjectID("PROJ-" + System.currentTimeMillis());
+        project.setProjectName(projectName);
+        project.setNeighborhood(neighborhood);
+        project.setTwoRoomUnits(twoRoomUnits);
+        project.setThreeRoomUnits(threeRoomUnits);
+        project.setRemainingTwoRoomUnits(twoRoomUnits);
+        project.setRemainingThreeRoomUnits(threeRoomUnits);
+        project.setApplicationOpenDate(openDate);
+        project.setApplicationCloseDate(closeDate);
+        project.setManagerInCharge(this.managerName);
+        project.setAvailableOfficerSlots(10);
+        project.setVisible(true);
+        
+        createProject(project);
     }
 
     @Override
-    public List<Project> viewAllProjects(Project project) {
-        // This method should return all projects regardless of who created them
-        // Implementation would depend on how projects are stored in the system
-        // For now, returning the projects created by this manager
-        return projectsCreated;
-    }
-
-    // IEnquiryManagement implementation
-    @Override
-    public void respondToEnquiry(Enquiry enquiry, String response) {
+    public void respondToEnquiry(String enquiryId, String response) {
+        // Find the enquiry and update its response
+        Enquiry enquiry = EnquiryRepository.findById(enquiryId);
         if (enquiry != null) {
-            enquiry.setResponse(response);
-            enquiry.setStatus("RESPONDED");
-            System.out.println("Response to enquiry " + enquiry.getEnquiryID() + " submitted successfully.");
+            // Check if the enquiry is related to a project managed by this manager
+            Project projectInEnquiry = enquiry.getProject();
+            if (projectsCreated.stream().anyMatch(p -> p.getProjectID().equals(projectInEnquiry.getProjectID()))) {
+                enquiry.setResponse(response);
+                enquiry.setStatus("ANSWERED");
+                System.out.println("Enquiry responded successfully.");
+            } else {
+                System.out.println("Cannot respond to enquiry for a project not managed by this manager.");
+            }
         } else {
             System.out.println("Enquiry not found.");
         }
     }
-
-    // HdbManager specific methods
-    public void approveOfficerRegistration(HdbOfficer officer) {
-        // Find the project the officer is applying for
-        Project project = findProjectById(officer.getProjectId());
-        
-        if (project == null) {
-            System.out.println("Project not found.");
-            return;
-        }
-        
-        // Check if this manager is in charge of the project
-        if (!project.getManagerInCharge().equals(this.getName())) {
-            System.out.println("You are not authorized to approve officers for this project.");
-            return;
-        }
-        
-        // Check if there are available slots for officers
-        if (project.getAvailableOfficerSlots() > 0) {
-            officer.setRegistrationStatus("APPROVED");
-            project.setAvailableOfficerSlots(project.getAvailableOfficerSlots() - 1);
-            System.out.println("Officer " + officer.getName() + " approved for project " + project.getProjectID());
-        } else {
-            System.out.println("No available officer slots for this project.");
-        }
-    }
-
-    public void approveApplication(Application application) {
-        Project project = application.getProject();
-        
-        // Check if this manager is in charge of the project
-        if (!project.getManagerInCharge().equals(this.getName())) {
-            System.out.println("You are not authorized to approve applications for this project.");
-            return;
-        }
-        
-        // Check if there are available units for the selected flat type
-        String flatType = application.getSelectedFlatType();
-        if (flatType.equals("2-ROOM") && project.getRemainingTwoRoom() > 0) {
-            application.setApplicationStatus("APPROVED");
-            project.setRemainingTwoRoom(project.getRemainingTwoRoom() - 1);
-            System.out.println("Application for 2-ROOM approved.");
-        } else if (flatType.equals("3-ROOM") && project.getRemainingThreeRoom() > 0) {
-            application.setApplicationStatus("APPROVED");
-            project.setRemainingThreeRoom(project.getRemainingThreeRoom() - 1);
-            System.out.println("Application for 3-ROOM approved.");
-        } else {
-            application.setApplicationStatus("REJECTED");
-            System.out.println("Application rejected due to no available units for the selected flat type.");
-        }
-    }
-
-    public Report generateReport(ReportType reportType) {
-        Report report = new Report();
-        report.setReportID(generateReportId());
-        report.setReportType(reportType);
-        
-        // Generate report data based on the report type
-        List<Object> reportData = new ArrayList<>();
-        
-        switch (reportType.toString()) {
-            case "ALL_BOOKINGS":
-                // Get all applications
-                // Implementation depends on how applications are stored
-                break;
-            case "BY_FLAT_TYPE":
-                // Get applications filtered by flat type
-                break;
-            case "BY_MARITAL_STATUS":
-                // Get applications filtered by marital status
-                break;
-            default:
-                System.out.println("Invalid report type.");
-        }
-        
-        report.setItems(reportData);
-        return report;
-    }
     
-    // Helper methods
-    private int findProjectIndex(Project project) {
-        for (int i = 0; i < projectsCreated.size(); i++) {
-            if (projectsCreated.get(i).getProjectID().equals(project.getProjectID())) {
-                return i;
-            }
-        }
-        return -1;
-    }
+    // Methods to handle additional requirements
     
-    private Project findProjectById(String projectId) {
-        for (Project project : projectsCreated) {
-            if (project.getProjectID().equals(projectId)) {
-                return project;
-            }
-        }
-        return null;
-    }
-    
-    private boolean isHandlingActiveProject() {
-        Date currentDate = new Date();
-        for (Project project : projectsCreated) {
-            if (this.getName().equals(project.getManagerInCharge()) &&
-                !currentDate.before(project.getApplicationOpenDate()) &&
-                !currentDate.after(project.getApplicationCloseDate())) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private boolean isWithinApplicationPeriod(Project newProject) {
-        Date currentDate = new Date();
-        return !currentDate.before(newProject.getApplicationOpenDate()) &&
-               !currentDate.after(newProject.getApplicationCloseDate());
-    }
-    
-    private String generateReportId() {
-        // Simple implementation to generate a report ID
-        return "RPT-" + System.currentTimeMillis();
-    }
-    
-    // Additional methods based on the requirements
-    public List<Project> viewAllProjects() {
-        // This would typically fetch all projects from a repository or database
-        // For now, returning the projects created by this manager
-        return projectsCreated;
-    }
-    
+    // View projects created by this manager only
     public List<Project> viewMyProjects() {
-        return projectsCreated;
+        return new ArrayList<>(projectsCreated);
     }
     
-    public void approveWithdrawalRequest(Application application) {
-        Project project = application.getProject();
-        
-        // Check if this manager is in charge of the project
-        if (!project.getManagerInCharge().equals(this.getName())) {
-            System.out.println("You are not authorized to approve withdrawal requests for this project.");
-            return;
+    // Handle applicant's withdrawal request
+    public void handleWithdrawalRequest(Application application, boolean approve) {
+        if (approve) {
+            // Release the flat unit back to available pool
+            Project project = application.getProject();
+            String flatType = application.getFlatType();
+            
+            if ("2-ROOM".equals(flatType)) {
+                project.setRemainingTwoRoomUnits(project.getRemainingTwoRoomUnits() + 1);
+            } else if ("3-ROOM".equals(flatType)) {
+                project.setRemainingThreeRoomUnits(project.getRemainingThreeRoomUnits() + 1);
+            }
+            
+            application.setApplicationStatus("WITHDRAWN");
+            System.out.println("Withdrawal request approved.");
+        } else {
+            System.out.println("Withdrawal request rejected.");
         }
-        
-        // Process withdrawal request
-        String flatType = application.getSelectedFlatType();
-        application.setApplicationStatus("WITHDRAWN");
-        
-        // Return the unit back to available units
-        if (flatType.equals("2-ROOM")) {
-            project.setRemainingTwoRoom(project.getRemainingTwoRoom() + 1);
-        } else if (flatType.equals("3-ROOM")) {
-            project.setRemainingThreeRoom(project.getRemainingThreeRoom() + 1);
-        }
-        
-        System.out.println("Withdrawal request approved for application: " + application.getApplicationId());
     }
     
+    // View all pending HDB Officer registrations
+    public List<HdbOfficer> viewPendingOfficerRegistrations() {
+        return projectsCreated.stream()
+                .flatMap(p -> HdbOfficer.getAllOfficers().stream()
+                        .filter(o -> o.getProjectAssigned() != null && 
+                                 o.getProjectAssigned().getProjectID().equals(p.getProjectID()) && 
+                                 "PENDING".equals(o.getRegistrationStatus())))
+                .collect(Collectors.toList());
+    }
+    
+    // View all approved HDB Officer registrations
+    public List<HdbOfficer> viewApprovedOfficerRegistrations() {
+        return projectsCreated.stream()
+                .flatMap(p -> HdbOfficer.getAllOfficers().stream()
+                        .filter(o -> o.getProjectAssigned() != null && 
+                                 o.getProjectAssigned().getProjectID().equals(p.getProjectID()) && 
+                                 "APPROVED".equals(o.getRegistrationStatus())))
+                .collect(Collectors.toList());
+    }
+    
+    // View all enquiries for all projects
     public List<Enquiry> viewAllEnquiries() {
-        // This would typically fetch all enquiries from a repository or database
-        // Implementation depends on how enquiries are stored
-        return new ArrayList<>(); // Placeholder
+        return EnquiryRepository.findAllEnquiries();
     }
     
-    public List<Enquiry> viewMyProjectEnquiries() {
-        // Get enquiries for projects managed by this manager
-        List<Enquiry> allEnquiries = viewAllEnquiries();
-        return allEnquiries.stream()
-            .filter(enquiry -> {
-                Project project = enquiry.getProject();
-                return project != null && project.getManagerInCharge().equals(this.getName());
-            })
-            .collect(Collectors.toList());
+    // View enquiries for projects managed by this manager
+    public List<Enquiry> viewMyProjectsEnquiries() {
+        return EnquiryRepository.findAllEnquiries().stream()
+                .filter(e -> e.getProject() != null && 
+                          projectsCreated.stream().anyMatch(p -> 
+                              p.getProjectID().equals(e.getProject().getProjectID())))
+                .collect(Collectors.toList());
+    }
+    
+    // Check if manager is handling any active projects
+    public boolean isHandlingActiveProject() {
+        Date currentDate = new Date();
+        return projectsCreated.stream().anyMatch(p -> 
+            currentDate.after(p.getApplicationOpenDate()) && 
+            currentDate.before(p.getApplicationCloseDate()));
     }
     
     // Getters and setters
@@ -269,5 +292,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
 
     public void setProjectsCreated(List<Project> projectsCreated) {
         this.projectsCreated = projectsCreated;
+    }
+    
+    // Override application method from Applicant to prevent HDB Managers from applying
+    @Override
+    public void createApplication(Project project, String flatType) {
+        System.out.println("HDB Managers cannot apply for BTO projects.");
     }
 }
