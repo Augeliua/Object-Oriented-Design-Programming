@@ -1,6 +1,6 @@
 package project;
 
-public class HdbOfficer extends User implements IEnquiryManagement, IApplicationProcessing{
+public class HdbOfficer extends User implements EnquiryManagement, ApplicationProcessing{
 	private String officerName;
 	private Project handlingProject;
 	private String registrationStatus;
@@ -76,10 +76,6 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         }
 	}
 	
-	public void processApplication(Application application)
-	{
-		
-	}
 	
 	public boolean bookFlat(Applicant applicant, FlatType flatType)
 	{
@@ -129,13 +125,91 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
 	
 	public boolean validateApplication(Application application)
 	{
-		
+		if (application == null) 
+		{
+	        System.out.println("Error: Application cannot be null");
+	        return false;
+	    }
+	    
+	    Applicant applicant = application.getApplicant();
+	    Project project = application.getProject();
+	    FlatType selectedFlatType = application.getSelectedFlatType();
+	   
+	    if (applicant.isWithPartner() && applicant.getAge() < 21) 
+	    {
+	        System.out.println("Error: Married applicants must be at least 21 years old");
+	        return false;
+	    }
+	    
+	    if (!applicant.isWithPartner() && applicant.getAge() < 35) 
+	    {
+	        System.out.println("Error: Single applicants must be at least 35 years old");
+	        return false;
+	    }
+	    
+	    // Check flat type eligibility
+	    if (!applicant.isWithPartner() && selectedFlatType != FlatType.TWO_ROOM) 
+	    {
+	        System.out.println("Error: Single applicants can only apply for 2-Room flats");
+	        return false;
+	    }
+	    
+	    // Check if project has available units of selected flat type
+	    if (project.getUnitsAvailable().get(selectedFlatType) <= 0) 
+	    {
+	        System.out.println("Error: No available units of selected flat type");
+	        return false;
+	    }
+	    
+	    // Check if applicant has already applied for other projects
+	    // This would require access to a repository or data store
+	    // For now, assume we're checking application status
+	    if (application.getStatus() != ApplicationStatus.PENDING) 
+	    {
+	        System.out.println("Error: Application status must be PENDING for validation");
+	        return false;
+	    }
+	    
+	    return true;
 	}
 	
-	public void updateApplicationStatus(Application application)
+	public void updateApplicationStatus(Application application, ApplicationStatus newStatus) 
 	{
-		
+	    if (application == null) 
+	    {
+	        System.out.println("Error: Cannot update status of null application");
+	        return;
+	    }
+	    
+	    ApplicationStatus oldStatus = application.getStatus();
+	    
+	    // Update the application status
+	    application.updateStatus(newStatus);
+	    
+	    System.out.println("Application status updated from " + oldStatus + " to " + newStatus);
+	    
+	    // Handle side effects based on new status
+	    if (newStatus == ApplicationStatus.SUCCESSFUL) 
+	    {
+	        System.out.println("Applicant " + application.getApplicant().getApplicantName() + " is invited to book a flat.");
+	    } 
+	    else if (newStatus == ApplicationStatus.UNSUCCESSFUL) 
+	    {
+	        System.out.println("Applicant " + application.getApplicant().getApplicantName() + " may apply for another project.");
+	    } 
+	    else if (newStatus == ApplicationStatus.BOOKED) 
+	    {
+	        // Decrease available units for the flat type
+	        Project project = application.getProject();
+	        FlatType flatType = application.getSelectedFlatType();
+	        
+	        int availableUnits = project.getUnitsAvailable().get(flatType);
+	        project.getUnitsAvailable().put(flatType, availableUnits - 1);
+	        
+	        System.out.println("Flat booked successfully. Remaining " + flatType + " units: " + (availableUnits - 1));
+	    }
 	}
+	
 	public void viewAllEnquiries()
 	{
 		
