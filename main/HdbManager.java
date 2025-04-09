@@ -12,27 +12,27 @@ public class HDBManager implements IProjectManagement {
 
     // Implementing IProjectManagement methods
     @Override
-    public void reviewProject(Project p) {
-        System.out.println("Reviewing project: " + p.getProjectID());
+    public void reviewProject(Project project) {
+        System.out.println("Reviewing project: " + project.getProjectID());
         // Add logic to review project details
     }
 
     @Override
-    public void approveProject(Project p) {
-        System.out.println("Approving project: " + p.getProjectID());
-        p.setApprovalStatus(true);
+    public void approveProject(Project project) {
+        System.out.println("Approving project: " + project.getProjectID());
+        project.setApprovalStatus(true);
     }
 
     // Method to create a new project
-    public void createProject(Project p) {
-        projectCreate.add(p);
-        System.out.println("Project created: " + p.getProjectID());
+    public void createProject(Project project) {
+        projectCreate.add(project);
+        System.out.println("Project created: " + project.getProjectID());
     }
 
     // Method to delete a project
-    public void deleteProject(Project p) {
-        projectCreate.remove(p);
-        System.out.println("Project deleted: " + p.getProjectID());
+    public void deleteProject(Project project) {
+        projectCreate.remove(project);
+        System.out.println("Project deleted: " + project.getProjectID());
     }
 
     // Generate a report based on ReportType
