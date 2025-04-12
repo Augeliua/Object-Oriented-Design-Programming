@@ -322,50 +322,24 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         }
     }
     
-    public void viewAllEnquiries() {
+    public List<Enquiry> getAllEnquiries() {
         if (handlingProject == null) {
-            System.out.println("Error: Officer is not assigned to any project");
-            return;
+            return new ArrayList<>();
         }
         
-        List<Enquiry> enquiries = enquiryRepository.findByProject(handlingProject);
-        
-        if (enquiries.isEmpty()) {
-            System.out.println("No enquiries found for project: " + handlingProject.getProjectID());
-            return;
-        }
-        
-        System.out.println("==== All Enquiries for Project: " + handlingProject.getProjectID() + " ====");
-        for (Enquiry enquiry : enquiries) {
-            System.out.println("ID: " + enquiry.getEnquiryId() + " | From: " + enquiry.getApplicant().getName() + " | Status: " + enquiry.getStatus());
-        }
+        return enquiryRepository.findByProject(handlingProject);
     }
     
-    public void viewPendingEnquiries() {
+    public List<Enquiry> getPendingEnquiries() {
         if (handlingProject == null) {
-            System.out.println("Error: Officer is not assigned to any project");
-            return;
+            return new ArrayList<>();
         }
         
         List<Enquiry> allEnquiries = enquiryRepository.findByProject(handlingProject);
         
-        List<Enquiry> pendingEnquiries = new ArrayList<>();
-        
-        for (Enquiry enquiry : allEnquiries) {
-            if (enquiry.getStatus() == EnquiryStatus.PENDING) { 
-                pendingEnquiries.add(enquiry);
-            }
-        }
-        
-        if (pendingEnquiries.isEmpty()) {
-            System.out.println("No pending enquiries found for project: " + handlingProject.getProjectID());
-            return;
-        }
-        
-        System.out.println("==== Pending Enquiries for Project: " + handlingProject.getProjectID() + " ====");
-        for (Enquiry enquiry : pendingEnquiries) {
-            System.out.println("Enquiry ID: " + enquiry.getEnquiryId());
-        }
+        return allEnquiries.stream()
+                .filter(e -> e.getStatus() == EnquiryStatus.PENDING)
+                .collect(Collectors.toList());
     }
     
     @Override
@@ -407,6 +381,33 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         
         System.out.println("Response added successfully to enquiry ID: " + e.getEnquiryId());
         System.out.println("Enquiry status updated to: " + e.getStatus());
+    }
+    
+    public Map<String, Object> getProjectDetails(Project project) {
+        Map<String, Object> details = new HashMap<>();
+        
+        if (project != null) {
+            details.put("projectId", project.getProjectID());
+            details.put("name", project.getProjectName());
+            details.put("neighborhood", project.getNeighborhood());
+            details.put("flatTypes", project.getFlatType());
+            details.put("pricePerFlat", project.getPricePerFlat());
+            details.put("thresholdPrice", project.getThresholdPrice());
+            details.put("applicationOpenDate", project.getApplicationOpenDate());
+            details.put("applicationCloseDate", project.getApplicationCloseDate());
+            details.put("visible", project.isVisible());
+            details.put("twoRoomUnits", project.getTwoRoomUnitsAvailable());
+            details.put("threeRoomUnits", project.getThreeRoomUnitsAvailable());
+            
+            // Add officer-specific info
+            boolean isHandlingProject = (handlingProject != null && handlingProject.equals(project));
+            details.put("isHandlingProject", isHandlingProject);
+            
+            if (isHandlingProject) {
+                details.put("availableOfficerSlots", project.getAvailableOfficerSlots());
+            }
+        }
+        return details;
     }
     
     // Getters and setters
