@@ -14,6 +14,7 @@ public class OfficerCLI {
             System.out.println("3. Reply to Enquiry");
             System.out.println("4. Book Flat for Applicant");
             System.out.println("5. Generate Receipt");
+            System.out.println("6. Change Password");
             System.out.println("0. Logout");
             System.out.print("Choose an option: ");
 
@@ -82,6 +83,7 @@ public class OfficerCLI {
                         System.out.println("Applicant not found.");
                     }
                 }
+                case "6" -> Main.changePassword(officer);
                 case "0" -> {
                     System.out.println("Logging out...");
                     return;
