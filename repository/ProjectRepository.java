@@ -1,28 +1,51 @@
+package sc2002.bto.repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import sc2002.bto.entity.Project;
+import sc2002.bto.interfaces.IRepository;
+
 public class ProjectRepository implements IRepository<Project> {
+    private List<Project> projects = new ArrayList<>();
+    
     @Override
     public Project getById(String id) {
-        // Implementation details
-        return null;
+        return projects.stream()
+                .filter(p -> p.getProjectID().equals(id))
+                .findFirst()
+                .orElse(null);
     }
     
     @Override
     public List<Project> getAll() {
-        // Implementation details
-        return null;
+        return new ArrayList<>(projects);
     }
     
     @Override
     public void add(Project item) {
-        // Implementation details
+        projects.add(item);
     }
     
     @Override
     public void update(Project item) {
-        // Implementation details
+        for (int i = 0; i < projects.size(); i++) {
+            if (projects.get(i).getProjectID().equals(item.getProjectID())) {
+                projects.set(i, item);
+                return;
+            }
+        }
+    }
+    
+    @Override
+    public void delete(String id) {
+        projects.removeIf(p -> p.getProjectID().equals(id));
     }
     
     public List<Project> findByNeighborhood(String neighborhood) {
-        // Implementation details
-        return null;
+        return projects.stream()
+                .filter(p -> p.getNeighborhood().equalsIgnoreCase(neighborhood))
+                .collect(Collectors.toList());
     }
 }
