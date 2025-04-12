@@ -400,34 +400,30 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	    return enquiry;
 	}
 	
-	 public void respondToEnquiry(Enquiry enquiry, String response) 
+	public void respondToEnquiry(Enquiry enquiry, String response) 
+	{
+	    if (enquiry == null) 
 	    {
-	        if (enquiry == null) 
-	        {
-	            System.out.println("Error: Cannot respond to null enquiry");
-	            return;
-	        }
-	        
-	        // Check if officer is handling the project related to this enquiry
-	        if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
-	        {
-	            System.out.println("Error: Officer can only respond to enquiries for projects they handle");
-	            return;
-	        }
-	        
-	        if (response == null || response.trim().isEmpty()) 
-	        {
-	            System.out.println("Error: Response cannot be empty");
-	            return;
-	        }
-	        
-	        // Add response to the enquiry
-	        enquiry.addResponse(response);
-	        
-	        // Update status to "REPLIED" using the enum
-	        enquiry.setStatus(EnquiryStatus.REPLIED);
-	        
-	        System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
-	        System.out.println("Enquiry status updated to: " + enquiry.getStatus());
+	        System.out.println("Error: Cannot respond to null enquiry");
+	        return;
 	    }
+	    
+	    // Check if officer is handling the project related to this enquiry
+	    if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
+	    {
+	        System.out.println("Error: Officer can only respond to enquiries for projects they handle");
+	        return;
+	    }
+	    
+	    if (response == null || response.trim().isEmpty()) 
+	    {
+	        System.out.println("Error: Response cannot be empty");
+	        return;
+	    }
+	    
+	    enquiry.reply(response);
+	    
+	    System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
+	    System.out.println("Enquiry status updated to: " + enquiry.getStatus());
+	}
 }
