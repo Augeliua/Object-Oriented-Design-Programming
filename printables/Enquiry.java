@@ -1,4 +1,6 @@
-package sc2002.group.proj;
+package sc2002.bto.entity;
+
+import sc2002.bto.enums.EnquiryStatus;
 
 public class Enquiry {
     private String enquiryId;
@@ -17,42 +19,63 @@ public class Enquiry {
         this.response = null; // No reply yet
     }
 
-    //Getters
-    public String getEnquiryId() { return enquiryId; } // Needed for looking up/editing/deleting
-    public Project getProject() { return project; } // Used to filter enquiries by project
-    public Applicant getApplicant() { return applicant; } // Used to check if the applicant owns this enquiry
-    public String getMessage() { return message; } // To display the enquiry content
-    public String getResponse() { return response; } // To show the officer/manager's reply
-    public EnquiryStatus getStatus() { return status; } // To control edit/delete permissions
-
-
-    //For applicant use
-    public void setMessage(String message) {
-    	if (status == EnquiryStatus.PENDING) 
-    		this.message = message;
-    } // Allows the applicant to change their message — but only if the enquiry hasn’t been replied to. 
-
-    public boolean isEditableOrDeletable() {
-    	return status == EnquiryStatus.PENDING;
+    // Getters
+    public String getEnquiryId() { 
+        return enquiryId; 
+    }
+    
+    public Project getProject() { 
+        return project; 
+    }
+    
+    public Applicant getApplicant() { 
+        return applicant; 
+    }
+    
+    public String getMessage() { 
+        return message; 
+    }
+    
+    public String getResponse() { 
+        return response; 
+    }
+    
+    public EnquiryStatus getStatus() { 
+        return status; 
     }
 
+    // For applicant use
+    public void setMessage(String message) {
+        if (status == EnquiryStatus.PENDING) 
+            this.message = message;
+    }
 
-    //For officer/manager use
+    public boolean isEditableOrDeletable() {
+        return status == EnquiryStatus.PENDING;
+    }
+
+    // For officer/manager use
     public void reply(String responseMessage) {
-    	this.response = responseMessage;
-    	this.status = EnquiryStatus.REPLIED;
-    } // It sets the response message and updates the status to REPLIED — which locks it from further edits/deletions by the applicant.
+        this.response = responseMessage;
+        this.status = EnquiryStatus.REPLIED;
+    }
 
     public void displayEnquiryDetails() {
         System.out.println("Enquiry ID: " + enquiryId);
+        System.out.println("From: " + applicant.getName());
         
         if (project != null) {
-            System.out.println("Project: " + project.getDescription());
+            System.out.println("Project: " + project.getProjectID());
         } else {
             System.out.println("Project: Not specified");
         }
+        
+        System.out.println("Message: " + message);
+        System.out.println("Status: " + status);
+        
+        if (response != null && !response.trim().isEmpty()) {
+            System.out.println("Response: " + response);
+        } else {
+            System.out.println("Response: Not yet answered");
+        }
     }
-
-}
-
-
