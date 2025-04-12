@@ -133,7 +133,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         for (Application a : all) {
             if (a.getStatus() == ApplicationStatus.PENDING) {
                 // Check for withdrawal requests first
-                if (a.isWithdrawalRequested()) {
+                if (a.withdrawalRequested()) {
                     a.updateStatus(ApplicationStatus.UNSUCCESSFUL);
                     System.out.println("Withdrawal processed for application: " + a.getApplicationId());
                     appRepo.update(a); // Save the new status
