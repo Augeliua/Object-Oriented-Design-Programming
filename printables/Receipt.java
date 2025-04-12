@@ -1,7 +1,5 @@
 package project;
 
-package project;
-
 public class Receipt {
 	private static int receiptCounter = 0;
 	
@@ -11,15 +9,15 @@ public class Receipt {
 	private int age;
 	private String maritalStatus;
 	private String projectID;
-    private String neighborhood;
-    private double pricePerFlat;
+    	private String neighborhood;
+    	private double pricePerFlat;
 	private FlatType flatType;
 	private String bookingDate;
 	
 	public Receipt() 
 	{
         this.receiptID = generateNextReceiptID();
-    }
+    	}
 	public Receipt(String id, String name, String nric, int age, String maritalStatus, String projID, String neighborhood, double price, FlatType f, String date)
 	{
 		this.receiptID = id;
@@ -38,7 +36,7 @@ public class Receipt {
 	{
         receiptCounter++;
         return String.format("RCPT-%05d", receiptCounter);
-    }
+    	}
 	
 	public String getReceiptID()
 	{
@@ -48,12 +46,12 @@ public class Receipt {
 	public void setReceiptId(String receiptId) 
 	{
         this.receiptID = receiptId;
-    }
+    	}
 	
 	public String getName() 
 	{
         return name;
-    }
+    	}
 	
 	public void setName(String name)
 	{
@@ -68,6 +66,16 @@ public class Receipt {
 	public void setNRIC(String nric)
 	{
 		this.nric = nric;
+	}
+	
+	public int getAge()
+	{
+		return age;
+	}
+	
+	public void setAge(int age)
+	{
+		this.age = age;
 	}
 	
 	public String getMaritalStatus()
@@ -100,7 +108,7 @@ public class Receipt {
 		this.neighborhood = neighborhood;
 	}
 	
-	public double returnPricePerFlat()
+	public double getPricePerFlat()
 	{
 		return pricePerFlat;
 	}
@@ -128,10 +136,11 @@ public class Receipt {
 	public void setBookingDate(String bookingDate) 
 	{
         this.bookingDate = bookingDate;
-    }
+    	}
 	
-	public void printReceiptDetails() {
-		System.out.println("---------------");
+	public void printReceiptDetails() 
+	{
+	    System.out.println("---------------");
 	    System.out.println("Receipt Details");
 	    System.out.println("---------------");
 	    System.out.println("Receipt ID: " + receiptID);
