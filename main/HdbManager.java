@@ -358,46 +358,17 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
     }
     
     // View all enquiries for all projects
-    public String printAllEnquiries(EnquiryRepository enquiryRepo) {
-        List<Enquiry> enquiries = enquiryRepo.getAll();
-        StringBuilder sb = new StringBuilder();
-        sb.append("All Enquiries:\n");
-        sb.append("=============\n\n");
-        
-        for (Enquiry e : enquiries) {
-            sb.append("ID: ").append(e.getEnquiryId()).append("\n");
-            sb.append("Project: ").append(e.getProject().getProjectID()).append("\n");
-            sb.append("From: ").append(e.getApplicant().getName()).append("\n");
-            sb.append("Status: ").append(e.getStatus()).append("\n");
-            sb.append("Question: ").append(e.getMessage()).append("\n");
-            sb.append("Response: ").append(e.getResponse() != null ? e.getResponse() : "Not answered yet").append("\n\n");
-        }
-        
-        return sb.toString();
+    public List<Enquiry> getAllEnquiries(EnquiryRepository enquiryRepo) {
+        return enquiryRepo.getAll();
     }
     
     // View enquiries for projects managed by this manager
-    public String printMyProjectsEnquiries(EnquiryRepository enquiryRepo) {
-        List<Enquiry> enquiries = enquiryRepo.getAll().stream()
+    public List<Enquiry> getMyProjectsEnquiries(EnquiryRepository enquiryRepo) {
+        return enquiryRepo.getAll().stream()
                 .filter(e -> e.getProject() != null && 
                           projectsCreated.stream().anyMatch(p -> 
                               p.getProjectID().equals(e.getProject().getProjectID())))
                 .collect(Collectors.toList());
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("Enquiries for My Projects:\n");
-        sb.append("=========================\n\n");
-        
-        for (Enquiry e : enquiries) {
-            sb.append("ID: ").append(e.getEnquiryId()).append("\n");
-            sb.append("Project: ").append(e.getProject().getProjectID()).append("\n");
-            sb.append("From: ").append(e.getApplicant().getName()).append("\n");
-            sb.append("Status: ").append(e.getStatus()).append("\n");
-            sb.append("Question: ").append(e.getMessage()).append("\n");
-            sb.append("Response: ").append(e.getResponse() != null ? e.getResponse() : "Not answered yet").append("\n\n");
-        }
-        
-        return sb.toString();
     }
     
     // Check if manager is handling any active projects
