@@ -1,4 +1,7 @@
-package sc2002.group.proj;
+package sc2002.bto.entity;
+
+import sc2002.bto.enums.ApplicationStatus;
+import sc2002.bto.enums.FlatType;
 
 public class Application {
     private String applicationId;
@@ -15,7 +18,7 @@ public class Application {
         this.project = project;
         this.applicationDate = applicationDate;
         this.selectedFlatType = selectedFlatType;
-        this.status = ApplicationStatus.PENDING; // Set default here (entry status)
+        this.status = ApplicationStatus.PENDING; // Set default status
     }
 
     // Getters
@@ -48,22 +51,17 @@ public class Application {
         this.selectedFlatType = flatType;
     }
 
-//    // Submit the application
-//    public void submit() {
-//        this.status = ApplicationStatus.PENDING;        
-//    }
-
     // Handle withdrawal
     public void requestWithdrawal() {
         this.withdrawalRequested = true;
     }
+    
     public boolean isWithdrawalRequested() {
         return this.withdrawalRequested;
-    } // isWithdrawalRequested() communicates with HDBManager
+    }
     
-    // Manually update status
+    // Update status
     public void updateStatus(ApplicationStatus newStatus) {
-    	// System.out.println("Status updated from " + this.status + " to " + newStatus);
         this.status = newStatus;
     }
 }
