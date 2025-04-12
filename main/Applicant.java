@@ -181,18 +181,14 @@ public class Applicant extends User {
 		this.bookedProject = project; // So applicant can view it later (Updates the Applicant object to remember which project they applied for)
 	}
 
-	//Allows the applicant to view the project and application status they applied for,
-	//even if the project's visibility is currently turned off
-	public void viewMyApplicationStatus(ApplicationRepository appRepo) {
-	 for (Application a : appRepo.getAll()) {
-	     if (a.getApplicant().getId().equals(this.getId())) { // check if this application belongs to the current applicant.
-	         System.out.println("Project: " + a.getProject().getDescription()); // ##### getProject() in Application? getDescription() in Project class?
-	         System.out.println("Status: " + a.getStatus());
-	         return;
-	     }
-	 }
-	 System.out.println("No application found.");
-	}
+	public Application getMyApplication(ApplicationRepository appRepo) {
+        	for (Application a : appRepo.getAll()) {
+            		if (a.getApplicant().getId().equals(this.getId())) {
+                		return a;
+            		}
+        	}
+        	return null;
+    	}
 
 
 	public boolean requestFlatBooking(HDBOfficer officer, FlatType flatType) {
