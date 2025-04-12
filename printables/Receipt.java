@@ -119,25 +119,32 @@ public class Receipt {
         this.bookingDate = bookingDate;
     }
     
-    public void printReceiptDetails() {
-        System.out.println("---------------");
-        System.out.println("Receipt Details");
-        System.out.println("---------------");
-        System.out.println("Receipt ID: " + receiptID);
+    /**
+     * Gets the receipt details as a formatted string
+     * @return A string containing all the receipt details
+     */
+    public String getReceiptDetailsAsString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("---------------\n");
+        sb.append("Receipt Details\n");
+        sb.append("---------------\n");
+        sb.append("Receipt ID: ").append(receiptID).append("\n\n");
             
-        System.out.println("\nApplicant Information:");
-        System.out.println("Name: " + name);
-        System.out.println("NRIC: " + nric);
-        System.out.println("Age: " + age);
-        System.out.println("Marital Status: " + maritalStatus);
+        sb.append("Applicant Information:\n");
+        sb.append("Name: ").append(name).append("\n");
+        sb.append("NRIC: ").append(nric).append("\n");
+        sb.append("Age: ").append(age).append("\n");
+        sb.append("Marital Status: ").append(maritalStatus).append("\n\n");
             
-        System.out.println("\nProject Information:");
-        System.out.println("Project ID: " + projectID);
-        System.out.println("Neighborhood: " + neighborhood);
-        System.out.println("Price per Flat: $" + pricePerFlat);
+        sb.append("Project Information:\n");
+        sb.append("Project ID: ").append(projectID).append("\n");
+        sb.append("Neighborhood: ").append(neighborhood).append("\n");
+        sb.append("Price per Flat: $").append(pricePerFlat).append("\n\n");
             
-        System.out.println("\nBooking Information:");
-        System.out.println("Flat Type: " + flatType);
-        System.out.println("Booking Date: " + bookingDate);
+        sb.append("Booking Information:\n");
+        sb.append("Flat Type: ").append(flatType).append("\n");
+        sb.append("Booking Date: ").append(bookingDate);
+        
+        return sb.toString();
     }
 }
