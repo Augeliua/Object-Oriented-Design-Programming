@@ -31,7 +31,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
             }
         }
         
-        // Initialize HDB Officer slots
+        // Initialise HDB Officer slots
         project.setAvailableOfficerSlots(10);
         
         // Add to projects created
@@ -71,8 +71,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     }
     
     public List<Project> viewAllProjects() {
-        // Assuming there's a static list of all projects somewhere
-        return ProjectRepository.findAllProjects();
+        return ProjectRepository.getAll();
     }
     
     public void approveOfficerRegistration(HdbOfficer officer) {
@@ -125,7 +124,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
-    // New method based on feedback in Image 1
+  
     public void reviewApplications(ApplicationRepository appRepo) {
         List<Application> all = appRepo.getAll();
         
@@ -166,7 +165,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         report.setReportType(reportType);
         
         // Get all applications for projects managed by this manager
-        List<Application> applications = ApplicationRepository.findAllApplications()
+        List<Application> applications = ApplicationRepository.getAll()
                 .stream()
                 .filter(app -> projectsCreated.contains(app.getProject()))
                 .collect(Collectors.toList());
@@ -215,7 +214,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     @Override
     public void respondToEnquiry(String enquiryId, String response) {
         // Find the enquiry and update its response
-        Enquiry enquiry = EnquiryRepository.findById(enquiryId);
+        Enquiry enquiry = EnquiryRepository.getById(enquiryId);
         if (enquiry != null) {
             // Check if the enquiry is related to a project managed by this manager
             Project projectInEnquiry = enquiry.getProject();
@@ -277,7 +276,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     
     // View all enquiries for all projects - making these "printable" as per feedback
     public String printAllEnquiries() {
-        List<Enquiry> enquiries = EnquiryRepository.findAllEnquiries();
+        List<Enquiry> enquiries = EnquiryRepository.getAll();
         StringBuilder sb = new StringBuilder();
         sb.append("All Enquiries:\n");
         sb.append("=============\n\n");
@@ -296,7 +295,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     
     // View enquiries for projects managed by this manager - making these "printable"
     public String printMyProjectsEnquiries() {
-        List<Enquiry> enquiries = EnquiryRepository.findAllEnquiries().stream()
+        List<Enquiry> enquiries = EnquiryRepository.getAll().stream()
                 .filter(e -> e.getProject() != null && 
                           projectsCreated.stream().anyMatch(p -> 
                               p.getProjectID().equals(e.getProject().getProjectID())))
