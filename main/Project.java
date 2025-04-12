@@ -1,5 +1,13 @@
+package sc2002.bto.entity;
+
+import sc2002.bto.enums.FlatType;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class Project {
     private String projectID;
+    private String projectName;
     private String neighborhood;
     private FlatType[] flatType;
     private double floorCount;
@@ -11,6 +19,7 @@ public class Project {
     private int availableOfficerSlots;
     private int twoRoomUnitsAvailable;
     private int threeRoomUnitsAvailable;
+    private String managerInCharge;
     
     // Constructor
     public Project(String projectID, String neighborhood, FlatType[] flatType, 
@@ -19,6 +28,7 @@ public class Project {
                    boolean isVisible, int availableOfficerSlots,
                    int twoRoomUnitsAvailable, int threeRoomUnitsAvailable) {
         this.projectID = projectID;
+        this.projectName = "Project " + projectID; // Default name if not set
         this.neighborhood = neighborhood;
         this.flatType = flatType;
         this.floorCount = floorCount;
@@ -39,6 +49,14 @@ public class Project {
     
     public void setProjectID(String projectID) {
         this.projectID = projectID;
+    }
+    
+    public String getProjectName() {
+        return projectName;
+    }
+    
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
     
     public String getNeighborhood() {
@@ -129,6 +147,14 @@ public class Project {
         this.threeRoomUnitsAvailable = threeRoomUnitsAvailable;
     }
     
+    public String getManagerInCharge() {
+        return managerInCharge;
+    }
+    
+    public void setManagerInCharge(String managerInCharge) {
+        this.managerInCharge = managerInCharge;
+    }
+    
     // Helper method to get units available for a specific flat type
     public int getUnitsAvailable(FlatType type) {
         if (type == FlatType.TWO_ROOM) {
@@ -137,5 +163,13 @@ public class Project {
             return threeRoomUnitsAvailable;
         }
         return 0;
+    }
+    
+    // Helper method to get a map of all available units by flat type
+    public Map<FlatType, Integer> getAvailableUnits() {
+        Map<FlatType, Integer> availableUnits = new HashMap<>();
+        availableUnits.put(FlatType.TWO_ROOM, twoRoomUnitsAvailable);
+        availableUnits.put(FlatType.THREE_ROOM, threeRoomUnitsAvailable);
+        return availableUnits;
     }
 }
