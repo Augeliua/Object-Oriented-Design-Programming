@@ -1,11 +1,15 @@
+package sc2002.bto.entity;
+
+import sc2002.bto.enums.MaritalStatus;
+
 public class User {
     private String id;
     private String name;
     private String password;
     private int age;
-    private boolean maritalStatus;
+    private MaritalStatus maritalStatus;
     
-    public User(String id, String name, String password, int age, boolean maritalStatus) {
+    public User(String id, String name, String password, int age, MaritalStatus maritalStatus) {
         this.id = id;
         this.name = name;
         this.password = password;
@@ -46,11 +50,11 @@ public class User {
         this.age = age;
     }
     
-    public boolean isMaritalStatus() {
+    public MaritalStatus getMaritalStatus() {
         return maritalStatus;
     }
     
-    public void setMaritalStatus(boolean maritalStatus) {
+    public void setMaritalStatus(MaritalStatus maritalStatus) {
         this.maritalStatus = maritalStatus;
     }
     
@@ -63,7 +67,7 @@ public class User {
         this.password = newPassword;
     }
     
-    public static User signup(String id, String name, String password, int age, boolean maritalStatus) {
+    public static User signup(String id, String name, String password, int age, MaritalStatus maritalStatus) {
         // Validate input parameters
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("ID cannot be empty");
