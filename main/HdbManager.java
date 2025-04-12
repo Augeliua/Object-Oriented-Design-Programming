@@ -92,14 +92,13 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         
         // Check if there are available slots
         if (targetProject.getAvailableOfficerSlots() > 0) {
-            officer.setRegistrationStatus("APPROVED");
+            officer.setRegistrationStatus(OfficerRegistrationStatus.APPROVED);
             targetProject.setAvailableOfficerSlots(targetProject.getAvailableOfficerSlots() - 1);
             System.out.println("Officer registration approved.");
         } else {
-            officer.setRegistrationStatus("REJECTED");
+            officer.setRegistrationStatus(OfficerRegistrationStatus.REJECTED);
             System.out.println("Officer registration rejected. No available slots.");
         }
-    }
     
     // Updated to match the approveApplication method based on feedback
     public void approveApplication(Application application) {
