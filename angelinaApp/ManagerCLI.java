@@ -28,6 +28,7 @@ public class ManagerCLI {
             System.out.println("3. Approve/Reject Applications");
             System.out.println("4. Approve/Reject Withdrawals");
             System.out.println("5. Generate Applicant Report");
+            System.out.println("6. Change Password");
             System.out.println("0. Logout");
             System.out.print("Enter choice: ");
             choice = Integer.parseInt(sc.nextLine());
