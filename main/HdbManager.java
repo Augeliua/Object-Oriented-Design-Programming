@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HDBManager extends Applicant implements IProjectManagement, IEnquiryManagement {
@@ -100,9 +101,10 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
+    // Updated to match the approveApplication method based on feedback
     public void approveApplication(Application application) {
         Project project = application.getProject();
-        String flatType = application.getFlatType();
+        FlatType type = application.getSelectedFlatType();
         
         // Check if the project is managed by this manager
         if (!projectsCreated.contains(project)) {
@@ -111,29 +113,51 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         }
         
         // Check if there are available units for the flat type
-        int availableUnits;
-        if ("2-ROOM".equals(flatType)) {
-            availableUnits = project.getRemainingTwoRoomUnits();
-            if (availableUnits > 0) {
-                project.setRemainingTwoRoomUnits(availableUnits - 1);
-                application.setApplicationStatus("APPROVED");
-                System.out.println("Application approved for a 2-ROOM flat.");
-            } else {
-                application.setApplicationStatus("REJECTED");
-                System.out.println("Application rejected. No available 2-ROOM units.");
-            }
-        } else if ("3-ROOM".equals(flatType)) {
-            availableUnits = project.getRemainingThreeRoomUnits();
-            if (availableUnits > 0) {
-                project.setRemainingThreeRoomUnits(availableUnits - 1);
-                application.setApplicationStatus("APPROVED");
-                System.out.println("Application approved for a 3-ROOM flat.");
-            } else {
-                application.setApplicationStatus("REJECTED");
-                System.out.println("Application rejected. No available 3-ROOM units.");
-            }
+        Map<FlatType, Integer> available = project.getAvailableUnits();
+        
+        if (available.getOrDefault(type, 0) > 0) {
+            application.updateStatus(ApplicationStatus.SUCCESSFUL);
+            // Decrease availability
+            available.put(type, available.get(type) - 1);
+            System.out.println("Application approved: " + application.getApplicationId());
         } else {
-            System.out.println("Invalid flat type specified.");
+            application.updateStatus(ApplicationStatus.UNSUCCESSFUL);
+            System.out.println("Application rejected (no units): " + application.getApplicationId());
+        }
+    }
+    
+    // New method based on feedback in Image 1
+    public void reviewApplications(ApplicationRepository appRepo) {
+        List<Application> all = appRepo.getAll();
+        
+        for (Application a : all) {
+            if (a.getStatus() == ApplicationStatus.PENDING) {
+                // Check for withdrawal requests first
+                if (a.isWithdrawalRequested()) {
+                    a.updateStatus(ApplicationStatus.UNSUCCESSFUL);
+                    System.out.println("Withdrawal processed for application: " + a.getApplicationId());
+                    appRepo.update(a); // Save the new status
+                    continue;
+                }
+                
+                // Approve or reject based on flat availability
+                FlatType type = a.getSelectedFlatType();
+                Project project = a.getProject();
+                
+                Map<FlatType, Integer> available = project.getAvailableUnits();
+                
+                if (available.getOrDefault(type, 0) > 0) {
+                    a.updateStatus(ApplicationStatus.SUCCESSFUL);
+                    // Decrease availability
+                    available.put(type, available.get(type) - 1);
+                    System.out.println("Application approved: " + a.getApplicationId());
+                } else {
+                    a.updateStatus(ApplicationStatus.UNSUCCESSFUL);
+                    System.out.println("Application rejected (no units): " + a.getApplicationId());
+                }
+                
+                appRepo.update(a); // Save the new status
+            }
         }
     }
     
@@ -215,23 +239,20 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         return new ArrayList<>(projectsCreated);
     }
     
-    // Handle applicant's withdrawal request
+    // Handle applicant's withdrawal request - modified based on feedback
     public void handleWithdrawalRequest(Application application, boolean approve) {
         if (approve) {
             // Release the flat unit back to available pool
             Project project = application.getProject();
-            String flatType = application.getFlatType();
+            FlatType flatType = application.getSelectedFlatType();
             
-            if ("2-ROOM".equals(flatType)) {
-                project.setRemainingTwoRoomUnits(project.getRemainingTwoRoomUnits() + 1);
-            } else if ("3-ROOM".equals(flatType)) {
-                project.setRemainingThreeRoomUnits(project.getRemainingThreeRoomUnits() + 1);
-            }
+            Map<FlatType, Integer> available = project.getAvailableUnits();
+            available.put(flatType, available.get(flatType) + 1);
             
-            application.setApplicationStatus("Unsuccessful");
-            System.out.println("Withdrawal request approved.");
+            application.updateStatus(ApplicationStatus.UNSUCCESSFUL);
+            System.out.println("Withdrawal request approved for application: " + application.getApplicationId());
         } else {
-            System.out.println("Withdrawal request rejected.");
+            System.out.println("Withdrawal request rejected for application: " + application.getApplicationId());
         }
     }
     
@@ -255,18 +276,47 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
                 .collect(Collectors.toList());
     }
     
-    // View all enquiries for all projects
-    public List<Enquiry> viewAllEnquiries() {
-        return EnquiryRepository.findAllEnquiries();
+    // View all enquiries for all projects - making these "printable" as per feedback
+    public String printAllEnquiries() {
+        List<Enquiry> enquiries = EnquiryRepository.findAllEnquiries();
+        StringBuilder sb = new StringBuilder();
+        sb.append("All Enquiries:\n");
+        sb.append("=============\n\n");
+        
+        for (Enquiry e : enquiries) {
+            sb.append("ID: ").append(e.getId()).append("\n");
+            sb.append("Project: ").append(e.getProject().getProjectName()).append("\n");
+            sb.append("From: ").append(e.getSubmitter().getName()).append("\n");
+            sb.append("Status: ").append(e.getStatus()).append("\n");
+            sb.append("Question: ").append(e.getQuestion()).append("\n");
+            sb.append("Response: ").append(e.getResponse() != null ? e.getResponse() : "Not answered yet").append("\n\n");
+        }
+        
+        return sb.toString();
     }
     
-    // View enquiries for projects managed by this manager
-    public List<Enquiry> viewMyProjectsEnquiries() {
-        return EnquiryRepository.findAllEnquiries().stream()
+    // View enquiries for projects managed by this manager - making these "printable"
+    public String printMyProjectsEnquiries() {
+        List<Enquiry> enquiries = EnquiryRepository.findAllEnquiries().stream()
                 .filter(e -> e.getProject() != null && 
                           projectsCreated.stream().anyMatch(p -> 
                               p.getProjectID().equals(e.getProject().getProjectID())))
                 .collect(Collectors.toList());
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("Enquiries for My Projects:\n");
+        sb.append("=========================\n\n");
+        
+        for (Enquiry e : enquiries) {
+            sb.append("ID: ").append(e.getId()).append("\n");
+            sb.append("Project: ").append(e.getProject().getProjectName()).append("\n");
+            sb.append("From: ").append(e.getSubmitter().getName()).append("\n");
+            sb.append("Status: ").append(e.getStatus()).append("\n");
+            sb.append("Question: ").append(e.getQuestion()).append("\n");
+            sb.append("Response: ").append(e.getResponse() != null ? e.getResponse() : "Not answered yet").append("\n\n");
+        }
+        
+        return sb.toString();
     }
     
     // Check if manager is handling any active projects
