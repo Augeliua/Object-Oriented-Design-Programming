@@ -16,24 +16,24 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	}
 	
 	public boolean registerForProject(Project project)
-	{
-		if (this.handlingProject != null)
-		{
-			System.out.println("Officer is currently enrolled in this project: " + handlingProject.getProjectID());
-			return false;
-		}
-		
-		if (project.getAvailableOfficerSlots <= 0)
-		{
-			System.out.println("No available slots for officers in this project: " + handlingProject.getProjectID());
-			return false;
-		}
-		
-		this.handlingProject = project;
-		this.registrationStatus = "PENDING";
-		System.out.println("Currently registered for this project, awaiting approval: " + handlingProject.getProjectID());
-		return true;
-	}
+    {
+        if (this.handlingProject != null)
+        {
+            System.out.println("Officer is currently enrolled in this project: " + handlingProject.getProjectID());
+            return false;
+        }
+        
+        if (project.getAvailableOfficerSlots <= 0)
+        {
+            System.out.println("No available slots for officers in this project: " + handlingProject.getProjectID());
+            return false;
+        }
+        
+        this.handlingProject = project;
+        this.registrationStatus = RegistrationStatus.PENDING;
+        System.out.println("Currently registered for this project, awaiting approval: " + handlingProject.getProjectID());
+        return true;
+    }
 	
 	public void viewProjectDetails(Project project)
 	{
@@ -201,56 +201,62 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
         return receipt;
     }
 	
-	public void processApplication(Application application) {
-	    if (application == null) {
-	        System.out.println("Error: Cannot process null application");
-	        return;
-	    }
-	    
-	    // Verify that the officer is handling this project
-	    if (handlingProject == null || !handlingProject.equals(application.getProject())) {
-	        System.out.println("Error: Officer can only process applications for projects they handle");
-	        return;
-	    }
-	    
-	    // Process based on current application status
-	    switch (application.getStatus()) {
-	        case PENDING:
-	            // Officer doesn't handle pending applications directly
-	            System.out.println("This application is still PENDING and awaiting manager review.");
-	            System.out.println("No action can be taken at this time.");
-	            break;
-	            
-	        case SUCCESSFUL:
-	            // Process booking for approved application
-	            Applicant applicant = application.getApplicant();
-	            FlatType flatType = application.getSelectedFlatType();
-	            
-	            // Use bookFlat to handle the booking process
-	            boolean bookingSuccess = bookFlat(applicant, flatType);
-	            
-	            if (bookingSuccess) {
-	                System.out.println("Application processed: Flat successfully booked");
-	            } else {
-	                System.out.println("Application processed: Booking failed");
-	            }
-	            break;
-	            
-	        case UNSUCCESSFUL:
-	            System.out.println("This application has been marked as UNSUCCESSFUL by the manager.");
-	            System.out.println("The applicant needs to submit a new application to continue.");
-	            break;
-	            
-	        case BOOKED:
-	            System.out.println("This application has already been processed and the flat is BOOKED.");
-	            System.out.println("No further processing is required.");
-	            break;
-	            
-	        default:
-	            System.out.println("Unknown application status: " + application.getStatus());
-	            System.out.println("No action can be taken.");
-	    }
-	}
+	public void processApplication(Application application) 
+	{
+        if (application == null) 
+        {
+            System.out.println("Error: Cannot process null application");
+            return;
+        }
+        
+        // Verify that the officer is handling this project
+        if (handlingProject == null || !handlingProject.equals(application.getProject())) {
+            System.out.println("Error: Officer can only process applications for projects they handle");
+            return;
+        }
+        
+        // Process based on current application status
+        switch (application.getStatus()) 
+        {
+            case PENDING:
+                // Officer doesn't handle pending applications directly
+                System.out.println("This application is still PENDING and awaiting manager review.");
+                System.out.println("No action can be taken at this time.");
+                break;
+                
+            case SUCCESSFUL:
+                // Process booking for approved application
+                Applicant applicant = application.getApplicant();
+                FlatType flatType = application.getSelectedFlatType();
+                
+                // Use bookFlat to handle the booking process
+                boolean bookingSuccess = bookFlat(applicant, flatType);
+                
+                if (bookingSuccess) 
+                {
+                    System.out.println("Application processed: Flat successfully booked");
+                } 
+                else 
+                {
+                    System.out.println("Application processed: Booking failed");
+                }
+                break;
+                
+            case UNSUCCESSFUL:
+                System.out.println("This application has been marked as UNSUCCESSFUL by the manager.");
+                System.out.println("The applicant needs to submit a new application to continue.");
+                break;
+                
+            case BOOKED:
+                System.out.println("This application has already been processed and the flat is BOOKED.");
+                System.out.println("No further processing is required.");
+                break;
+                
+            default:
+                System.out.println("Unknown application status: " + application.getStatus());
+                System.out.println("No action can be taken.");
+        }
+    }
 	
 	public boolean validateApplication(Application application)
 	{
@@ -344,29 +350,36 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	    }
 	}
 	
-	public void viewPendingEnquiries()
-	{
-		if (handlingProject == null)
-		{
-			System.out.println("Error: Officer is not assigned to any project");
-			return;
-		}
-		
-		List<Enquiry> allEnquiries = enquiryRepository.findByProject(handlingProject);
-		
-		List<Enquiry> pendingEnquiries = new ArrayList<>();
-		if (pendingEnquiries.isEmpty()) 
-		{
-	        System.out.println("No pending enquiries found for project: " + handlingProject.getProjectID());
-	        return;
-	    }
-	    
-	    System.out.println("==== Pending Enquiries for Project: " + handlingProject.getProjectID() + " ====");
-	    for (Enquiry enquiry : pendingEnquiries) 
-	    {
-	    	System.out.println("ID: " + enquiry.getEnquiryID() + " | From: " + enquiry.getApplicant().getApplicantName() + " | Status: " + enquiry.getStatus());
-	    }
-	}
+	public void viewPendingEnquiries() {
+        if (handlingProject == null) 
+        {
+            System.out.println("Error: Officer is not assigned to any project");
+            return;
+        }
+        
+        List<Enquiry> allEnquiries = enquiryRepository.findByProject(handlingProject);
+        
+        List<Enquiry> pendingEnquiries = new ArrayList<>();
+        
+        for (Enquiry enquiry : allEnquiries) {
+            if (enquiry.getStatus() == EnquiryStatus.PENDING) 
+            { 
+                pendingEnquiries.add(enquiry);
+            }
+        }
+        
+        if (pendingEnquiries.isEmpty()) 
+        {
+            System.out.println("No pending enquiries found for project: " + handlingProject.getProjectID());
+            return;
+        }
+        
+        System.out.println("==== Pending Enquiries for Project: " + handlingProject.getProjectID() + " ====");
+        for (Enquiry enquiry : pendingEnquiries) 
+        {
+            System.out.println("Enquiry ID: " + enquiry.getEnquiryID());
+        }
+    }
 	
 	public Enquiry viewEnquiry(Enquiry enquiry) 
 	{
@@ -387,34 +400,34 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	    return enquiry;
 	}
 	
-	public void respondToEnquiry(Enquiry enquiry, String response) 
-	{
-	    if (enquiry == null) 
+	 public void respondToEnquiry(Enquiry enquiry, String response) 
 	    {
-	        System.out.println("Error: Cannot respond to null enquiry");
-	        return;
+	        if (enquiry == null) 
+	        {
+	            System.out.println("Error: Cannot respond to null enquiry");
+	            return;
+	        }
+	        
+	        // Check if officer is handling the project related to this enquiry
+	        if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
+	        {
+	            System.out.println("Error: Officer can only respond to enquiries for projects they handle");
+	            return;
+	        }
+	        
+	        if (response == null || response.trim().isEmpty()) 
+	        {
+	            System.out.println("Error: Response cannot be empty");
+	            return;
+	        }
+	        
+	        // Add response to the enquiry
+	        enquiry.addResponse(response);
+	        
+	        // Update status to "REPLIED" using the enum
+	        enquiry.setStatus(EnquiryStatus.REPLIED);
+	        
+	        System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
+	        System.out.println("Enquiry status updated to: " + enquiry.getStatus());
 	    }
-	    
-	    // Check if officer is handling the project related to this enquiry
-	    if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
-	    {
-	        System.out.println("Error: Officer can only respond to enquiries for projects they handle");
-	        return;
-	    }
-	    
-	    if (response == null || response.trim().isEmpty()) 
-	    {
-	        System.out.println("Error: Response cannot be empty");
-	        return;
-	    }
-	    
-	    // Add response to the enquiry
-	    enquiry.addResponse(response);
-	    
-	    // Update status to "RESPONDED"
-	    enquiry.setStatus("REPLIED");
-	    
-	    System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
-	    System.out.println("Enquiry status updated to: " + enquiry.getStatus());
-	}	
 }
