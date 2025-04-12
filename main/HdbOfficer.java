@@ -5,14 +5,17 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	private String officerName;
 	private Project handlingProject;
 	private String registrationStatus;
+	private ApplicationRepository applicationRepository;
+	private EnquiryRepository enquiryRepository;
 	
-	public HdbOfficer(String id, String name, String password, int age, boolean maritalStatus, String officerName, Project project, String regiStatus) 
+	public HdbOfficer(String id, String name, String password, int age, boolean maritalStatus, String officerName, Project project, RegistrationStatus regiStatus,ApplicationRepository appRepo, EnquiryRepository enqRepo) 
 	{
 		super(id, name, password, age, maritalStatus);
-
 		this.officerName = officerName;
 		this.handlingProject = project;
 		this.registrationStatus = regiStatus;
+		this.applicationRepository = appRepo;
+		this.enquiryRepository = enqRepo;
 	}
 	
 	public boolean registerForProject(Project project)
@@ -421,7 +424,10 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	        return;
 	    }
 	    
+	    // Call the reply method instead of addResponse
 	    enquiry.reply(response);
+	    
+	    // No need to manually set the status as it's handled in the reply method
 	    
 	    System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
 	    System.out.println("Enquiry status updated to: " + enquiry.getStatus());
