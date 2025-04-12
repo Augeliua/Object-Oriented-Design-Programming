@@ -79,7 +79,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
         // Find the project the officer is applying for
         Project targetProject = null;
         for (Project p : projectsCreated) {
-            if (p.getProjectID().equals(officer.getProjectAssigned().getProjectID())) {
+            if (p.getProjectID().equals(officer.gethandlingProject().getProjectID())) {
                 targetProject = p;
                 break;
             }
@@ -260,8 +260,8 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     public List<HdbOfficer> viewPendingOfficerRegistrations() {
         return projectsCreated.stream()
                 .flatMap(p -> HdbOfficer.getAllOfficers().stream()
-                        .filter(o -> o.getProjectAssigned() != null && 
-                                 o.getProjectAssigned().getProjectID().equals(p.getProjectID()) && 
+                        .filter(o -> o.gethandlingProject() != null && 
+                                 o.gethandlingProject().getProjectID().equals(p.getProjectID()) && 
                                  "PENDING".equals(o.getRegistrationStatus())))
                 .collect(Collectors.toList());
     }
@@ -270,8 +270,8 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     public List<HdbOfficer> viewApprovedOfficerRegistrations() {
         return projectsCreated.stream()
                 .flatMap(p -> HdbOfficer.getAllOfficers().stream()
-                        .filter(o -> o.getProjectAssigned() != null && 
-                                 o.getProjectAssigned().getProjectID().equals(p.getProjectID()) && 
+                        .filter(o -> o.gethadnlingProject() != null && 
+                                 o.gethandlingProject().getProjectID().equals(p.getProjectID()) && 
                                  "APPROVED".equals(o.getRegistrationStatus())))
                 .collect(Collectors.toList());
     }
