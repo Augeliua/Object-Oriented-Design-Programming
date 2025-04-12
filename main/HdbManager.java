@@ -228,7 +228,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
                 project.setRemainingThreeRoomUnits(project.getRemainingThreeRoomUnits() + 1);
             }
             
-            application.setApplicationStatus("WITHDRAWN");
+            application.setApplicationStatus("Unsuccessful");
             System.out.println("Withdrawal request approved.");
         } else {
             System.out.println("Withdrawal request rejected.");
