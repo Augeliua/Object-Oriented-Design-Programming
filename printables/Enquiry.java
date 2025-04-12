@@ -60,6 +60,38 @@ public class Enquiry {
         this.status = EnquiryStatus.REPLIED;
     }
 
+    /**
+     * Gets the enquiry details as a formatted string
+     * @return A string containing all the enquiry details
+     */
+    public String getEnquiryDetailsAsString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Enquiry ID: ").append(enquiryId).append("\n");
+        sb.append("From: ").append(applicant.getName()).append("\n");
+        
+        if (project != null) {
+            sb.append("Project: ").append(project.getProjectID()).append("\n");
+        } else {
+            sb.append("Project: Not specified\n");
+        }
+        
+        sb.append("Message: ").append(message).append("\n");
+        sb.append("Status: ").append(status).append("\n");
+        
+        if (response != null && !response.trim().isEmpty()) {
+            sb.append("Response: ").append(response);
+        } else {
+            sb.append("Response: Not yet answered");
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * @deprecated Use getEnquiryDetailsAsString() instead
+     * Displays the enquiry details to the console
+     */
+    @Deprecated
     public void displayEnquiryDetails() {
         System.out.println("Enquiry ID: " + enquiryId);
         System.out.println("From: " + applicant.getName());
@@ -79,3 +111,4 @@ public class Enquiry {
             System.out.println("Response: Not yet answered");
         }
     }
+}
