@@ -1,4 +1,5 @@
 package project;
+import java.util.*;
 
 public class HdbOfficer extends User implements EnquiryManagement, ApplicationProcessing{
 	private String officerName;
@@ -76,10 +77,92 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
         }
 	}
 	
+	private Application findApplicationByApplicant(Applicant applicant, Project project) {
+	    if (applicant == null || project == null) {
+	        System.out.println("Error: Applicant and project cannot be null");
+	        return null;
+	    }
+	    
+	    // Use the application repository to find applications by this applicant
+	    List<Application> applicantApplications = applicationRepository.findByApplicant(applicant);
+	    
+	    // Filter to find the application for the specific project
+	    for (Application application : applicantApplications) {
+	        if (application.getProject().equals(project)) {
+	            return application;
+	        }
+	    }
+	    
+	    System.out.println("No application found for applicant " + applicant.getApplicantName() + 
+	                      " in project " + project.getProjectID());
+	    return null;
+	}
 	
-	public boolean bookFlat(Applicant applicant, FlatType flatType)
+	private boolean bookFlat(Applicant applicant, FlatType flatType) 
 	{
-		
+		if (applicant == null || flatType == null) {
+	        System.out.println("Error: Applicant and flat type cannot be null");
+	        return false;
+	    }
+	    
+	    // Check if units are still available based on flat type
+	    int availableUnits = 0;
+	    
+	    if (flatType == FlatType.TWO_ROOM) 
+	    {
+	        availableUnits = handlingProject.getTwoRoomUnitsAvailable();
+	    } 
+	    else if (flatType == FlatType.THREE_ROOM) 
+	    {
+	        availableUnits = handlingProject.getThreeRoomUnitsAvailable();
+	    } 
+	    else 
+	    {
+	        System.out.println("Error: Unsupported flat type: " + flatType);
+	        return false;
+	    }
+	    
+	    if (availableUnits <= 0) {
+	        System.out.println("Error: No units available for flat type: " + flatType);
+	        return false;
+	    }
+	    
+	    // Find applicant's application for the project
+	    Application application = findApplicationByApplicant(applicant, handlingProject);
+	    
+	    if (application == null) {
+	        System.out.println("Error: No application found for this applicant and project");
+	        return false;
+	    }
+	    
+	    // Verify flat type matches what was applied for
+	    if (!application.getSelectedFlatType().equals(flatType)) {
+	        System.out.println("Error: Cannot book a different flat type than what was applied for");
+	        return false;
+	    }
+	    
+	    // Update number of units available
+	    if (flatType == FlatType.TWO_ROOM) {
+	        handlingProject.setTwoRoomUnitsAvailable(availableUnits - 1);
+	    } else if (flatType == FlatType.THREE_ROOM) {
+	        handlingProject.setThreeRoomUnitsAvailable(availableUnits - 1);
+	    }
+	    
+	    // Update applicant's profile
+	    applicant.setBookedFlat(flatType);
+	    applicant.setBookedProject(handlingProject);
+	    
+	    // Update application status
+	    application.updateStatus(ApplicationStatus.BOOKED);
+	    
+	    System.out.println("Flat successfully booked for applicant: " + applicant.getApplicantName());
+	    System.out.println("Flat type: " + flatType);
+	    System.out.println("Remaining units of this type: " + (availableUnits - 1));
+	    
+	    // Generate receipt
+	    Receipt receipt = generateReceipt(application);
+	    
+	    return true;
 	}
 	
 	public Receipt generateReceipt(Application application)
@@ -118,15 +201,60 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
         return receipt;
     }
 	
-	public void processApplication(Application application)
-	{
-		
+	public void processApplication(Application application) {
+	    if (application == null) {
+	        System.out.println("Error: Cannot process null application");
+	        return;
+	    }
+	    
+	    // Verify that the officer is handling this project
+	    if (handlingProject == null || !handlingProject.equals(application.getProject())) {
+	        System.out.println("Error: Officer can only process applications for projects they handle");
+	        return;
+	    }
+	    
+	    // Process based on current application status
+	    switch (application.getStatus()) {
+	        case PENDING:
+	            // Officer doesn't handle pending applications directly
+	            System.out.println("This application is still PENDING and awaiting manager review.");
+	            System.out.println("No action can be taken at this time.");
+	            break;
+	            
+	        case SUCCESSFUL:
+	            // Process booking for approved application
+	            Applicant applicant = application.getApplicant();
+	            FlatType flatType = application.getSelectedFlatType();
+	            
+	            // Use bookFlat to handle the booking process
+	            boolean bookingSuccess = bookFlat(applicant, flatType);
+	            
+	            if (bookingSuccess) {
+	                System.out.println("Application processed: Flat successfully booked");
+	            } else {
+	                System.out.println("Application processed: Booking failed");
+	            }
+	            break;
+	            
+	        case UNSUCCESSFUL:
+	            System.out.println("This application has been marked as UNSUCCESSFUL by the manager.");
+	            System.out.println("The applicant needs to submit a new application to continue.");
+	            break;
+	            
+	        case BOOKED:
+	            System.out.println("This application has already been processed and the flat is BOOKED.");
+	            System.out.println("No further processing is required.");
+	            break;
+	            
+	        default:
+	            System.out.println("Unknown application status: " + application.getStatus());
+	            System.out.println("No action can be taken.");
+	    }
 	}
 	
 	public boolean validateApplication(Application application)
 	{
-		if (application == null) 
-		{
+		if (application == null) {
 	        System.out.println("Error: Application cannot be null");
 	        return false;
 	    }
@@ -134,39 +262,35 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	    Applicant applicant = application.getApplicant();
 	    Project project = application.getProject();
 	    FlatType selectedFlatType = application.getSelectedFlatType();
-	   
-	    if (applicant.isWithPartner() && applicant.getAge() < 21) 
-	    {
+	    
+	    // Check if applicant meets age requirements
+	    if (applicant.isWithPartner() && applicant.getAge() < 21) {
 	        System.out.println("Error: Married applicants must be at least 21 years old");
 	        return false;
 	    }
 	    
-	    if (!applicant.isWithPartner() && applicant.getAge() < 35) 
-	    {
+	    if (!applicant.isWithPartner() && applicant.getAge() < 35) {
 	        System.out.println("Error: Single applicants must be at least 35 years old");
 	        return false;
 	    }
 	    
 	    // Check flat type eligibility
-	    if (!applicant.isWithPartner() && selectedFlatType != FlatType.TWO_ROOM) 
-	    {
+	    if (!applicant.isWithPartner() && selectedFlatType != FlatType.TWO_ROOM) {
 	        System.out.println("Error: Single applicants can only apply for 2-Room flats");
 	        return false;
 	    }
 	    
 	    // Check if project has available units of selected flat type
-	    if (project.getUnitsAvailable().get(selectedFlatType) <= 0) 
-	    {
-	        System.out.println("Error: No available units of selected flat type");
-	        return false;
+	    int availableUnits = 0;
+	    
+	    if (selectedFlatType == FlatType.TWO_ROOM) {
+	        availableUnits = project.getTwoRoomUnitsAvailable();
+	    } else if (selectedFlatType == FlatType.THREE_ROOM) {
+	        availableUnits = project.getThreeRoomUnitsAvailable();
 	    }
 	    
-	    // Check if applicant has already applied for other projects
-	    // This would require access to a repository or data store
-	    // For now, assume we're checking application status
-	    if (application.getStatus() != ApplicationStatus.PENDING) 
-	    {
-	        System.out.println("Error: Application status must be PENDING for validation");
+	    if (availableUnits <= 0) {
+	        System.out.println("Error: No available units of selected flat type");
 	        return false;
 	    }
 	    
@@ -175,8 +299,8 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	
 	public void updateApplicationStatus(Application application, ApplicationStatus newStatus) 
 	{
-	    if (application == null) 
-	    {
+		if (application == null) 
+		{
 	        System.out.println("Error: Cannot update status of null application");
 	        return;
 	    }
@@ -188,42 +312,109 @@ public class HdbOfficer extends User implements EnquiryManagement, ApplicationPr
 	    
 	    System.out.println("Application status updated from " + oldStatus + " to " + newStatus);
 	    
-	    // Handle side effects based on new status
-	    if (newStatus == ApplicationStatus.SUCCESSFUL) 
+	    // Notify based on new status
+	    if (newStatus == ApplicationStatus.BOOKED) 
 	    {
-	        System.out.println("Applicant " + application.getApplicant().getApplicantName() + " is invited to book a flat.");
-	    } 
-	    else if (newStatus == ApplicationStatus.UNSUCCESSFUL) 
-	    {
-	        System.out.println("Applicant " + application.getApplicant().getApplicantName() + " may apply for another project.");
-	    } 
-	    else if (newStatus == ApplicationStatus.BOOKED) 
-	    {
-	        // Decrease available units for the flat type
-	        Project project = application.getProject();
-	        FlatType flatType = application.getSelectedFlatType();
-	        
-	        int availableUnits = project.getUnitsAvailable().get(flatType);
-	        project.getUnitsAvailable().put(flatType, availableUnits - 1);
-	        
-	        System.out.println("Flat booked successfully. Remaining " + flatType + " units: " + (availableUnits - 1));
+	        System.out.println("Booking confirmed for applicant: " + application.getApplicant().getApplicantName());
+	        System.out.println("Generating receipt...");
+	        generateReceipt(application);
 	    }
 	}
 	
 	public void viewAllEnquiries()
 	{
+		if (handlingProject == null)
+		{
+			System.out.println("Error: Officer is not assigned to any project");
+			return;
+		}
 		
+		List<Enquiry> enquiries = enquiryRepository.findByProject(handlingProject);
+		
+		if (enquiries.isEmpty())
+		{
+			System.out.println("No enquiries found for project: " + handlingProject.getProjectID());
+	        return;
+		}
+		
+		System.out.println("==== All Enquiries for Project: " + handlingProject.getProjectID() + " ====");
+	    for (Enquiry enquiry : enquiries) 
+	    {
+	    	System.out.println("ID: " + enquiry.getEnquiryID() + " | From: " + enquiry.getApplicant().getApplicantName() + " | Status: " + enquiry.getStatus());
+	    }
 	}
 	
 	public void viewPendingEnquiries()
 	{
+		if (handlingProject == null)
+		{
+			System.out.println("Error: Officer is not assigned to any project");
+			return;
+		}
 		
+		List<Enquiry> allEnquiries = enquiryRepository.findByProject(handlingProject);
+		
+		List<Enquiry> pendingEnquiries = new ArrayList<>();
+		if (pendingEnquiries.isEmpty()) 
+		{
+	        System.out.println("No pending enquiries found for project: " + handlingProject.getProjectID());
+	        return;
+	    }
+	    
+	    System.out.println("==== Pending Enquiries for Project: " + handlingProject.getProjectID() + " ====");
+	    for (Enquiry enquiry : pendingEnquiries) 
+	    {
+	    	System.out.println("ID: " + enquiry.getEnquiryID() + " | From: " + enquiry.getApplicant().getApplicantName() + " | Status: " + enquiry.getStatus());
+	    }
 	}
 	
-	public void respondToEnquiry(Enquiry e, String response)
+	public Enquiry viewEnquiry(Enquiry enquiry) 
 	{
-		
+	    if (enquiry == null) 
+	    {
+	        System.out.println("Error: Cannot view null enquiry");
+	        return null;
+	    }
+	    
+	    // Check if officer is handling the project related to this enquiry
+	    if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
+	    {
+	        System.out.println("Error: Officer can only view enquiries for projects they handle");
+	        return null;
+	    }
+	    
+	    enquiry.displayEnquiryDetails();
+	    return enquiry;
 	}
 	
-	
+	public void respondToEnquiry(Enquiry enquiry, String response) 
+	{
+	    if (enquiry == null) 
+	    {
+	        System.out.println("Error: Cannot respond to null enquiry");
+	        return;
+	    }
+	    
+	    // Check if officer is handling the project related to this enquiry
+	    if (handlingProject == null || !handlingProject.equals(enquiry.getProject())) 
+	    {
+	        System.out.println("Error: Officer can only respond to enquiries for projects they handle");
+	        return;
+	    }
+	    
+	    if (response == null || response.trim().isEmpty()) 
+	    {
+	        System.out.println("Error: Response cannot be empty");
+	        return;
+	    }
+	    
+	    // Add response to the enquiry
+	    enquiry.addResponse(response);
+	    
+	    // Update status to "RESPONDED"
+	    enquiry.setStatus("REPLIED");
+	    
+	    System.out.println("Response added successfully to enquiry ID: " + enquiry.getEnquiryID());
+	    System.out.println("Enquiry status updated to: " + enquiry.getStatus());
+	}	
 }
