@@ -39,6 +39,7 @@ public class ManagerCLI {
                 case 3 -> approveApplications();
                 case 4 -> approveWithdrawals();
                 case 5 -> generateReport();
+                case 6 -> Main.changePassword(manager);
                 case 0 -> System.out.println("Logging out...");
                 default -> System.out.println("Invalid choice.");
             }
