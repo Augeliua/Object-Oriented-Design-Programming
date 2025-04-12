@@ -270,7 +270,7 @@ public class HDBManager extends Applicant implements IProjectManagement, IEnquir
     public List<HdbOfficer> viewApprovedOfficerRegistrations() {
         return projectsCreated.stream()
                 .flatMap(p -> HdbOfficer.getAllOfficers().stream()
-                        .filter(o -> o.gethadnlingProject() != null && 
+                        .filter(o -> o.gethandlingProject() != null && 
                                  o.gethandlingProject().getProjectID().equals(p.getProjectID()) && 
                                  "APPROVED".equals(o.getRegistrationStatus())))
                 .collect(Collectors.toList());
