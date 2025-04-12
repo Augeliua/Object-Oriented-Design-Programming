@@ -21,6 +21,7 @@ public class ApplicantCLI {
             System.out.println("7. Delete Enquiry");
             System.out.println("8. Request Flat Booking");
             System.out.println("9. Request Withdrawal");
+            System.out.println("10. Change Password");
             System.out.println("0. Logout");
             System.out.print("Enter your choice: ");
 
@@ -83,6 +84,7 @@ public class ApplicantCLI {
                     }
                 }
                 case "9" -> applicant.requestWithdrawal(appRepo);
+                case "10" -> Main.changePassword(applicant);
                 case "0" -> {
                     System.out.println("Logging out...");
                     return;
