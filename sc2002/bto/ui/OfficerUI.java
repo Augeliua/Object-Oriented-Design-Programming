@@ -270,10 +270,11 @@ public class OfficerUI extends BaseUserUI {
         
         // Get applications with status SUCCESSFUL for the officer's handling project
         List<Application> successfulApplications = applicationRepo.getAll().stream()
-                                                 .filter(a -> a.getProject() != null && 
-                                                          a.getProject().equals(officer.getHandlingProject()) &&
-                                                          a.getStatus() == ApplicationStatus.SUCCESSFUL)
-                                                 .collect(Collectors.toList());
+        	    .filter(a -> a.getProject() != null && 
+        	                a.getProject().equals(officer.getHandlingProject()) &&
+        	                (a.getStatus() == ApplicationStatus.SUCCESSFUL || a.getStatus() == ApplicationStatus.BOOKED))
+        	    .collect(Collectors.toList());
+
         
         if (successfulApplications.isEmpty()) {
             System.out.println("No successful applications found for receipt generation.");
