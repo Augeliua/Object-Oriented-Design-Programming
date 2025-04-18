@@ -8,7 +8,7 @@ public class Application {
     private Applicant applicant;
     private Project project;
     private String applicationDate; 
-    private ApplicationStatus status;
+    private ApplicationStatus status = ApplicationStatus.PENDING;
     private FlatType selectedFlatType;
     private boolean withdrawalRequested = false;
 
@@ -18,7 +18,6 @@ public class Application {
         this.project = project;
         this.applicationDate = applicationDate;
         this.selectedFlatType = selectedFlatType;
-        this.status = ApplicationStatus.PENDING; // Set default status
     }
 
     // Getters
