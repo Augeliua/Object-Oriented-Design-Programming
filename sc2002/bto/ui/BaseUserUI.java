@@ -1,12 +1,12 @@
 package sc2002.bto.ui;
 
 import java.util.Scanner;
-
 import sc2002.bto.entity.User;
 import sc2002.bto.repository.ApplicationRepository;
 import sc2002.bto.repository.EnquiryRepository;
 import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
+import sc2002.bto.util.FileHandler;
 
 /**
  * Base class for all user interface classes
@@ -81,6 +81,9 @@ public abstract class BaseUserUI {
         currentUser.setPassword(newPassword);
         userRepo.update(currentUser);
         
+        // Save changes to ensure password change persists
+        FileHandler.saveAllData(userRepo, projectRepo, applicationRepo, enquiryRepo);
+        
         System.out.println("Password changed successfully.");
     }
     
@@ -109,7 +112,15 @@ public abstract class BaseUserUI {
             showMenu();
             String choice = scanner.nextLine();
             logout = handleMenuChoice(choice);
+            
+            // Save after each significant action
+            if (!logout) {
+                FileHandler.saveAllData(userRepo, projectRepo, applicationRepo, enquiryRepo);
+            }
         }
+        
+        // Final save before logout
+        FileHandler.saveAllData(userRepo, projectRepo, applicationRepo, enquiryRepo);
         
         return false; // Return to login screen by default
     }
