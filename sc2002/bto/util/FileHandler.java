@@ -110,15 +110,15 @@ public class FileHandler {
      */
     private static void ensureAllFilesExist() throws IOException {
         String[] files = {
-                APPLICANT_FILE, MANAGER_FILE, OFFICER_FILE, PROJECT_FILE,
-                APPLICATION_FILE, ENQUIRY_FILE, RECEIPT_FILE
+            APPLICANT_FILE, MANAGER_FILE, OFFICER_FILE, PROJECT_FILE,
+            APPLICATION_FILE, ENQUIRY_FILE, RECEIPT_FILE
         };
-
+        
         for (String file : files) {
             File f = new File(file);
             if (!f.exists()) {
                 f.createNewFile();
-
+                
                 // Write headers to the new file
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
                     switch (file) {
@@ -129,25 +129,21 @@ public class FileHandler {
                             writer.write("ID,Name,Password,Age,MaritalStatus,Income\n");
                             break;
                         case OFFICER_FILE:
-                            writer.write(
-                                    "ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus,RegisteringManager\n");
+                            // Removed RegisteringManager from header
+                            writer.write("ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus\n");
                             break;
                         case PROJECT_FILE:
-                            writer.write(
-                                    "ProjectID,ProjectName,Neighborhood,FlatTypes,FloorCount,PricePerFlat,ThresholdPrice,"
-                                            +
-                                            "OpenDate,CloseDate,Visible,OfficerSlots,TwoRoomUnits,ThreeRoomUnits,ManagerInCharge\n");
+                            writer.write("ProjectID,ProjectName,Neighborhood,FlatTypes,FloorCount,PricePerFlat,ThresholdPrice," +
+                                        "OpenDate,CloseDate,Visible,OfficerSlots,TwoRoomUnits,ThreeRoomUnits,ManagerInCharge\n");
                             break;
                         case APPLICATION_FILE:
-                            writer.write(
-                                    "ApplicationID,ApplicantID,ProjectID,ApplicationDate,Status,FlatType,WithdrawalRequested\n");
+                            writer.write("ApplicationID,ApplicantID,ProjectID,ApplicationDate,Status,FlatType,WithdrawalRequested\n");
                             break;
                         case ENQUIRY_FILE:
                             writer.write("EnquiryID,ProjectID,ApplicantID,Message,Response,Status\n");
                             break;
                         case RECEIPT_FILE:
-                            writer.write(
-                                    "ReceiptID,Name,NRIC,Age,MaritalStatus,ProjectID,Neighborhood,Price,FlatType,BookingDate\n");
+                            writer.write("ReceiptID,Name,NRIC,Age,MaritalStatus,ProjectID,Neighborhood,Price,FlatType,BookingDate\n");
                             break;
                     }
                 }
@@ -266,56 +262,60 @@ public class FileHandler {
     /**
      * Load officers from CSV file
      */
-    private static int loadOfficers(UserRepository userRepo,
-            ApplicationRepository appRepo,
-            EnquiryRepository enqRepo) throws IOException {
-        int count = 0;
-        File file = new File(OFFICER_FILE);
-
-        if (!file.exists() || file.length() == 0) {
-            return 0;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            // Skip header
-            String header = br.readLine();
-            if (header == null)
-                return 0;
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length < 7)
-                    continue;
-
-                String id = data[0].trim();
-                String name = data[1].trim();
-                String password = data[2].trim();
-                int age = Integer.parseInt(data[3].trim());
-                MaritalStatus status = data[4].trim().equalsIgnoreCase("MARRIED") ? MaritalStatus.MARRIED
-                        : MaritalStatus.SINGLE;
-
-                // Project and status will be set after loading projects
-                OfficerRegistrationStatus regStatus = OfficerRegistrationStatus.PENDING;
-                if (data.length > 6) {
-                    String statusStr = data[6].trim();
-                    if (statusStr.equalsIgnoreCase("APPROVED")) {
-                        regStatus = OfficerRegistrationStatus.APPROVED;
-                    } else if (statusStr.equalsIgnoreCase("REJECTED")) {
-                        regStatus = OfficerRegistrationStatus.REJECTED;
-                    }
-                }
-
-                // Create officer without project reference (will be set later)
-                HdbOfficer officer = new HdbOfficer(id, name, password, age, status, name,
-                        null, null, regStatus, null, appRepo, enqRepo);
-                userRepo.add(officer);
-                count++;
-            }
-        }
-
-        return count;
+    private static int loadOfficers(UserRepository userRepo, 
+                               ApplicationRepository appRepo, 
+                               EnquiryRepository enqRepo) throws IOException {
+    int count = 0;
+    File file = new File(OFFICER_FILE);
+    
+    if (!file.exists() || file.length() == 0) {
+        return 0;
     }
+    
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        // Skip header
+        String header = br.readLine();
+        if (header == null) return 0;
+        
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] data = line.split(",");
+            if (data.length < 6) continue;  // Need at least 6 fields now
+            
+            String id = data[0].trim();
+            String name = data[1].trim();
+            String password = data[2].trim();
+            int age = Integer.parseInt(data[3].trim());
+            MaritalStatus status = data[4].trim().equalsIgnoreCase("MARRIED") ? 
+                                   MaritalStatus.MARRIED : MaritalStatus.SINGLE;
+            
+            // Project ID (might be empty)
+            String handlingProjectID = "";
+            if (data.length > 5) {
+                handlingProjectID = data[5].trim();
+            }
+            
+            // Registration status
+            OfficerRegistrationStatus regStatus = OfficerRegistrationStatus.PENDING;
+            if (data.length > 6) {
+                String statusStr = data[6].trim();
+                if (statusStr.equalsIgnoreCase("APPROVED")) {
+                    regStatus = OfficerRegistrationStatus.APPROVED;
+                } else if (statusStr.equalsIgnoreCase("REJECTED")) {
+                    regStatus = OfficerRegistrationStatus.REJECTED;
+                }
+            }
+            
+            // Create officer without project reference (will be set later)
+            HdbOfficer officer = new HdbOfficer(id, name, password, age, status, name, 
+                                               null, null, regStatus, null, appRepo, enqRepo);
+            userRepo.add(officer);
+            count++;
+        }
+    }
+    
+    return count;
+}
 
     /**
      * Load projects from CSV file
@@ -638,40 +638,32 @@ public class FileHandler {
     private static void saveOfficers(UserRepository userRepo) throws IOException {
         List<User> users = userRepo.getAll();
         List<HdbOfficer> officers = new ArrayList<>();
-
+        
         // Filter to get only officers
         for (User user : users) {
             if (user instanceof HdbOfficer) {
                 officers.add((HdbOfficer) user);
             }
         }
-
+        
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(OFFICER_FILE))) {
             // Write header
-            writer.write(
-                    "ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus,RegisteringManager\n");
-
+            writer.write("ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus\n");
+            
             // Write data
             for (HdbOfficer officer : officers) {
-                String handlingProjectID = (officer.getHandlingProject() != null)
-                        ? officer.getHandlingProject().getProjectID()
-                        : "";
-                String pendingProjectID = (officer.getPendingProject() != null)
-                        ? officer.getPendingProject().getProjectID()
-                        : "";
-                String registeringManagerID = (officer.getRegisteringManager() != null)
-                        ? officer.getRegisteringManager().getId()
-                        : "";
-
+                String handlingProjectID = (officer.getHandlingProject() != null) ? 
+                                           officer.getHandlingProject().getProjectID() : "";
+                
                 writer.write(
-                        officer.getId() + "," +
-                                officer.getName() + "," +
-                                officer.getPassword() + "," +
-                                officer.getAge() + "," +
-                                officer.getMaritalStatus() + "," +
-                                handlingProjectID + "," +
-                                officer.getRegistrationStatus() + "," +
-                                registeringManagerID + "\n");
+                    officer.getId() + "," +
+                    officer.getName() + "," +
+                    officer.getPassword() + "," +
+                    officer.getAge() + "," +
+                    officer.getMaritalStatus() + "," +
+                    handlingProjectID + "," +
+                    officer.getRegistrationStatus() + "\n"
+                );
             }
         }
     }
