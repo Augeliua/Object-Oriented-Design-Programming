@@ -217,8 +217,9 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     }
     
     public Receipt generateReceipt(Application application) {
-        if (application == null || application.getStatus() != ApplicationStatus.SUCCESSFUL) {
-            System.out.println("Cannot generate receipt: Application is not SUCCESSFUL status");
+        if (application == null || 
+        	    !(application.getStatus() == ApplicationStatus.SUCCESSFUL || application.getStatus() == ApplicationStatus.BOOKED)) {
+            System.out.println("Cannot generate receipt: Application must be SUCCESSFUL or BOOKED");
             return null;
         }
         
