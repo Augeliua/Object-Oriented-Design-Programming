@@ -2,7 +2,6 @@ package sc2002.bto.ui;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import sc2002.bto.entity.Application;
 import sc2002.bto.entity.Enquiry;
 import sc2002.bto.entity.HdbOfficer;
@@ -17,9 +16,13 @@ import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
 
 /**
- * UI class for HDB Officer users
+ * UI class for HDB Officer users in the BTO system.
+ * Provides functionality for officers to view projects, register for projects,
+ * process applications, generate receipts, and handle enquiries.
+ * 
  */
 public class OfficerUI extends BaseUserUI {
+    /** The officer user */
     private HdbOfficer officer;
     
     @Override
@@ -30,6 +33,9 @@ public class OfficerUI extends BaseUserUI {
         return super.run(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
     }
     
+    /**
+     * Displays additional profile information specific to officers.
+     */
     @Override
     protected void displayAdditionalProfileInfo() {
         System.out.println("Officer Name: " + officer.getOfficerName());
@@ -39,6 +45,9 @@ public class OfficerUI extends BaseUserUI {
         }
     }
     
+    /**
+     * Shows the menu options for officer users.
+     */
     @Override
     protected void showMenu() {
         System.out.println("\n===== BTO Management System: Officer Menu =====");
@@ -57,6 +66,12 @@ public class OfficerUI extends BaseUserUI {
         System.out.print("Enter your choice: ");
     }
     
+    /**
+     * Handles menu choices for officer users.
+     * 
+     * @param choice The user's menu selection
+     * @return true if the user wants to logout, false otherwise
+     */
     @Override
     protected boolean handleMenuChoice(String choice) {
         switch (choice) {
@@ -103,7 +118,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Display all projects
+     * Displays all projects in the system.
      */
     private void displayAllProjects() {
         List<Project> allProjects = projectRepo.getAll();
@@ -127,7 +142,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Display project details
+     * Displays detailed information about a selected project.
      */
     private void displayProjectDetails() {
         // First show all projects
@@ -165,7 +180,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Register for a project
+     * Handles the process of registering for a project.
      */
     private void registerForProject() {
         // First show all projects with vacancies for officers
@@ -211,7 +226,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Process application
+     * Handles the process of processing an application.
      */
     private void processApplication() {
         if (officer.getHandlingProject() == null) {
@@ -260,7 +275,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Generate receipt
+     * Handles the process of generating a receipt.
      */
     private void generateReceipt() {
         if (officer.getHandlingProject() == null) {
@@ -314,7 +329,7 @@ public class OfficerUI extends BaseUserUI {
     }
     
     /**
-     * Respond to enquiry
+     * Handles the process of responding to an enquiry.
      */
     private void respondToEnquiry() {
         if (officer.getHandlingProject() == null) {
