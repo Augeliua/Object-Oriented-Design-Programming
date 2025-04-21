@@ -3,7 +3,6 @@ package sc2002.bto.entity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import sc2002.bto.enums.ApplicationStatus;
 import sc2002.bto.enums.EnquiryStatus;
 import sc2002.bto.enums.FlatType;
@@ -11,13 +10,33 @@ import sc2002.bto.enums.MaritalStatus;
 import sc2002.bto.repository.ApplicationRepository;
 import sc2002.bto.repository.EnquiryRepository;
 import sc2002.bto.repository.ProjectRepository;
-
+/**
+ * Represents an applicant in the BTO Management System.
+ * This class extends the User class and contains additional properties and methods
+ * specific to applicants, such as income range, flat booking functionality, and enquiry management.
+ * 
+ */
 public class Applicant extends User {
+    /** The name of the applicant */
     private String applicantName;
+    /** The income range of the applicant */
     private Double incomeRange;
-    private FlatType bookedFlat = null;    // Default: not booked
-    private Project bookedProject = null;  // Default: not applied/booked
+    /** The type of flat booked by the applicant, null if not booked yet */
+    private FlatType bookedFlat = null;
+    /** The project for which the applicant has booked a flat, null if not booked yet */
+    private Project bookedProject = null;
 
+    /**
+     * Creates a new applicant with the specified details.
+     * 
+     * @param id The applicant's NRIC as a unique identifier
+     * @param name The applicant's name
+     * @param password The applicant's password
+     * @param age The applicant's age
+     * @param maritalStatus The applicant's marital status
+     * @param applicantName The applicant's full name
+     * @param incomeRange The applicant's income range
+     */
     public Applicant(String id, String name, String password, int age, MaritalStatus maritalStatus, 
                      String applicantName, Double incomeRange) {
         super(id, name, password, age, maritalStatus);
@@ -59,6 +78,13 @@ public class Applicant extends User {
         this.bookedProject = bookedProject;
     }
 
+    /**
+     * Retrieves a list of projects that the applicant is eligible to apply for.
+     * Eligibility is determined by age, marital status, and available units.
+     * 
+     * @param projectRepo The repository containing all available projects
+     * @return A list of projects that the applicant is eligible for
+     */
     public List<Project> viewEligibleProjects(ProjectRepository projectRepo) {
         List<Project> allProjects = projectRepo.getAll();
         List<Project> eligibleProjects = new ArrayList<>();
@@ -102,6 +128,14 @@ public class Applicant extends User {
         return eligibleProjects;
     }
 
+    /**
+     * Submits an enquiry about a specific project.
+     * 
+     * @param project The project to enquire about
+     * @param message The enquiry message
+     * @param enquiryRepo The repository to store the enquiry
+     * @return The created enquiry object
+     */
     public Enquiry submitEnquiry(Project project, String message, EnquiryRepository enquiryRepo) {
         // Create unique ID
         String enquiryId = UUID.randomUUID().toString();
@@ -116,6 +150,12 @@ public class Applicant extends User {
         return enquiry;
     }
 
+    /**
+     * Retrieves all enquiries submitted by this applicant.
+     * 
+     * @param repo The enquiry repository
+     * @return A list of enquiries submitted by this applicant
+     */
     public List<Enquiry> viewMyEnquiries(EnquiryRepository repo) {
         List<Enquiry> all = repo.getAll();
         List<Enquiry> mine = new ArrayList<>();
@@ -128,7 +168,13 @@ public class Applicant extends User {
         return mine;
     }
 
-    //Allows applicant to edit their own enquiry message, if it's still in PENDING status
+    /**
+     * Edits an existing enquiry message if it's still in PENDING status.
+     * 
+     * @param enquiryId The ID of the enquiry to edit
+     * @param newMessage The new message content
+     * @param enquiryRepo The enquiry repository
+     */
     public void editEnquiry(String enquiryId, String newMessage, EnquiryRepository enquiryRepo) {
         List<Enquiry> all = enquiryRepo.getAll();
 
@@ -147,7 +193,12 @@ public class Applicant extends User {
         System.out.println("Enquiry not found or not owned by applicant.");
     }
 
-    //Allows applicant to delete their own enquiry, if it's still in PENDING status
+    /**
+     * Deletes an enquiry if it's still in PENDING status.
+     * 
+     * @param enquiryId The ID of the enquiry to delete
+     * @param enquiryRepo The enquiry repository
+     */
     public void deleteEnquiry(String enquiryId, EnquiryRepository enquiryRepo) {
         List<Enquiry> all = enquiryRepo.getAll();
 
@@ -165,6 +216,14 @@ public class Applicant extends User {
         System.out.println("Enquiry not found or not owned by applicant.");
     }
 
+    /**
+     * Submits an application for a project and flat type.
+     * 
+     * @param project The project to apply for
+     * @param flatType The type of flat to apply for
+     * @param appRepo The application repository
+     * @param projectRepo The project repository
+     */
     public void submitApplication(Project project, FlatType flatType, ApplicationRepository appRepo, ProjectRepository projectRepo) {
         // Check if applicant is eligible to apply for the project (i.e., has viewing rights)
         List<Project> eligibleProjects = viewEligibleProjects(projectRepo);
@@ -183,8 +242,12 @@ public class Applicant extends User {
         this.bookedProject = project;
     }
 
-    //Allows the applicant to view the project and application status they applied for,
-    //even if the project's visibility is currently turned off
+    /**
+     * Retrieves the applicant's current application.
+     * 
+     * @param appRepo The application repository
+     * @return The applicant's current application, or null if none exists
+     */
     public Application getMyApplication(ApplicationRepository appRepo) {
         for (Application a : appRepo.getAll()) {
             if (a.getApplicant().getId().equals(this.getId())) {
@@ -194,6 +257,14 @@ public class Applicant extends User {
         return null;
     }
 
+    /**
+     * Requests to book a flat through an HDB Officer.
+     * 
+     * @param officer The HDB Officer handling the booking
+     * @param application The application for which to book a flat
+     * @param flatType The type of flat to book
+     * @return true if the booking request was successful, false otherwise
+     */
     public boolean requestFlatBooking(HdbOfficer officer, Application application, FlatType flatType) {
         // only can request to book through officer IF status is SUCCESSFUL
         if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
@@ -207,6 +278,13 @@ public class Applicant extends User {
         // request flat booking to officer. officer handles actual booking
         return officer.bookFlat(this, flatType);
     }
+
+    /**
+     * Requests withdrawal of the applicant's current application.
+     * 
+     * @param appRepo The application repository
+     * @return true if the withdrawal request was successful, false otherwise
+     */
 
     public boolean requestWithdrawal(ApplicationRepository appRepo) {
         List<Application> allApplications = appRepo.getAll();
@@ -229,6 +307,11 @@ public class Applicant extends User {
         return true;
     }
 
+    /**
+     * Displays the status of the applicant's current application.
+     * 
+     * @param appRepo The application repository
+     */
     public void viewMyApplicationStatus(ApplicationRepository appRepo) {
         for (Application a : appRepo.getAll()) {
             if (a.getApplicant().getId().equals(this.getId())) {
