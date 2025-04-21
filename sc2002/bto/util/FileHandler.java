@@ -27,8 +27,9 @@ import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
 
 /**
- * Utility class to handle file operations for the BTO System
- * Handles both reading from and writing to CSV files for data persistence
+ * Utility class for handling file operations in the BTO system.
+ * Manages loading user data and creating default data for demonstration.
+ * 
  */
 public class FileHandler {
     private static final String DATA_DIR = "data/";
@@ -45,13 +46,13 @@ public class FileHandler {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     /**
-     * Load all data from CSV files
+     * Loads users from files or creates default users if file loading fails.
      * 
-     * @param userRepo        The user repository to populate
-     * @param projectRepo     The project repository to populate
-     * @param applicationRepo The application repository to populate
-     * @param enquiryRepo     The enquiry repository to populate
-     * @return True if all data loaded successfully, false otherwise
+     * @param userRepo Repository for user data
+     * @param applicationRepo Repository for application data
+     * @param enquiryRepo Repository for enquiry data
+     * @return The number of users loaded
+     * @throws IOException If an error occurs while reading the file
      */
     public static boolean loadAllData(UserRepository userRepo, ProjectRepository projectRepo,
             ApplicationRepository applicationRepo, EnquiryRepository enquiryRepo) {
@@ -769,11 +770,14 @@ public class FileHandler {
     }
 
     /**
-     * Creates some default users for demonstration
+     * Creates default users for demonstration purposes.
      * 
-     * @param userRepo The user repository to populate
+     * @param userRepo Repository for user data
+     * @param applicationRepo Repository for application data
+     * @param enquiryRepo Repository for enquiry data
      * @return The number of users created
      */
+
     private static int createDefaultUsers(UserRepository userRepo, ApplicationRepository applicationRepo,
             EnquiryRepository enquiryRepo) {
         int count = 0;
@@ -1072,10 +1076,10 @@ public class FileHandler {
     }
 
     /**
-     * Gets a summary of loaded users
+     * Gets a summary of loaded users by type.
      * 
-     * @param userRepo The user repository
-     * @return A summary string with counts of different user types
+     * @param userRepo Repository containing user data
+     * @return A string summarizing the number of users by type
      */
     public static String getUserSummary(UserRepository userRepo) {
         List<User> users = userRepo.getAll();
