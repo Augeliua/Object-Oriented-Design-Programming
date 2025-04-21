@@ -17,17 +17,27 @@ import sc2002.bto.repository.UserRepository;
 import sc2002.bto.util.FileHandler;
 
 /**
- * Main entry point for the BTO Management System
- * Handles login, signup, and directing users to their respective interfaces
- * Manages data persistence using CSV files
+ * Main entry point for the BTO Management System.
+ * Handles user login, signup, and directs users to their respective interfaces.
+ * 
  */
 public class MainUI {
+    /** Scanner for reading user input */
     private static Scanner scanner = new Scanner(System.in);
+    /** Repository for user data */
     private static UserRepository userRepo = new UserRepository();
+    /** Repository for project data */
     private static ProjectRepository projectRepo = new ProjectRepository();
+    /** Repository for application data */
     private static ApplicationRepository applicationRepo = new ApplicationRepository();
+    /** Repository for enquiry data */
     private static EnquiryRepository enquiryRepo = new EnquiryRepository();
 
+    /**
+     * Main method that starts the application.
+     * 
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         System.out.println("Welcome to BTO Management System");
 
@@ -83,7 +93,7 @@ public class MainUI {
     }
 
     /**
-     * Load initial data from CSV files
+     * Loads initial data for the system.
      */
     private static void loadInitialData() {
         try {
@@ -133,6 +143,9 @@ public class MainUI {
         }
     }
 
+    /**
+     * Displays the login menu.
+     */
     private static void showLoginMenu() {
         System.out.println("\n===== BTO Management System =====");
         System.out.println("1. Login");
@@ -141,6 +154,11 @@ public class MainUI {
         System.out.print("Enter your choice: ");
     }
 
+    /**
+     * Handles the user login process.
+     * 
+     * @return The authenticated user, or null if authentication fails
+     */
     private static User login() {
         System.out.print("Enter NRIC: ");
         String nric = scanner.nextLine();
@@ -158,6 +176,9 @@ public class MainUI {
         }
     }
 
+    /**
+     * Handles the user signup process.
+     */
     private static void signup() {
         System.out.println("\n===== Sign Up =====");
 
@@ -246,8 +267,7 @@ public class MainUI {
     }
 
     /**
-     * Create sample projects for testing
-     * This is a fallback if loading from CSV fails
+     * Creates sample projects for demonstration purposes.
      */
     private static void createSampleProjects() {
         try {
