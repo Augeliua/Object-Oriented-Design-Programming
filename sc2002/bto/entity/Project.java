@@ -1,27 +1,63 @@
 package sc2002.bto.entity;
 
-import sc2002.bto.enums.FlatType;
-
 import java.util.HashMap;
 import java.util.Map;
+import sc2002.bto.enums.FlatType;
 
+/**
+ * Represents a Build-To-Order (BTO) housing project.
+ * This class contains all information about a BTO project including its location,
+ * available units, application dates, and visibility status.
+ * 
+ */
 public class Project {
-    private String projectID;
-    private String projectName;
-    private String neighborhood;
-    private FlatType[] flatType;
-    private double floorCount;
-    private double pricePerFlat;
-    private double thresholdPrice;
-    private String applicationOpenDate;
-    private String applicationCloseDate;
-    private boolean isVisible;
-    private int availableOfficerSlots;
-    private int twoRoomUnitsAvailable;
-    private int threeRoomUnitsAvailable;
-    private String managerInCharge;
+        /** Unique identifier for the project */
+        private String projectID;
+        /** Name of the project */
+        private String projectName;
+        /** Neighborhood where the project is located */
+        private String neighborhood;
+        /** Types of flats available in this project */
+        private FlatType[] flatType;
+        /** Number of floors in the project buildings */
+        private double floorCount;
+        /** Base price per flat unit */
+        private double pricePerFlat;
+        /** Minimum price threshold for the project */
+        private double thresholdPrice;
+        /** Date when applications for this project open */
+        private String applicationOpenDate;
+        /** Date when applications for this project close */
+        private String applicationCloseDate;
+        /** Visibility status of the project to applicants */
+        private boolean isVisible;
+        /** Number of HDB officer slots available for this project */
+        private int availableOfficerSlots;
+        /** Number of 2-room units currently available */
+        private int twoRoomUnitsAvailable;
+        /** Number of 3-room units currently available */
+        private int threeRoomUnitsAvailable;
+        /** NRIC of the manager in charge of this project */
+        private String managerInCharge;
+    
     
     // Constructor
+    /**
+     * Creates a new BTO project with the specified details.
+     * 
+     * @param projectID Unique identifier for the project
+     * @param neighborhood Area where the project is located
+     * @param flatType Array of flat types available in this project
+     * @param floorCount Number of floors in the buildings
+     * @param pricePerFlat Base price per flat unit
+     * @param thresholdPrice Minimum price threshold
+     * @param applicationOpenDate Date when applications open (format: YYYY-MM-DD)
+     * @param applicationCloseDate Date when applications close (format: YYYY-MM-DD)
+     * @param isVisible Whether the project is visible to applicants
+     * @param availableOfficerSlots Number of HDB officer slots available
+     * @param twoRoomUnitsAvailable Number of 2-room units available
+     * @param threeRoomUnitsAvailable Number of 3-room units available
+     */
     public Project(String projectID, String neighborhood, FlatType[] flatType, 
                    double floorCount, double pricePerFlat, double thresholdPrice,
                    String applicationOpenDate, String applicationCloseDate,
@@ -155,7 +191,12 @@ public class Project {
         this.managerInCharge = managerInCharge;
     }
     
-    // Helper method to get units available for a specific flat type
+    /**
+     * Gets the number of available units for a specific flat type.
+     * 
+     * @param type The flat type to check
+     * @return The number of available units for the specified flat type
+     */
     public int getUnitsAvailable(FlatType type) {
         if (type == FlatType.TWO_ROOM) {
             return twoRoomUnitsAvailable;
@@ -165,7 +206,11 @@ public class Project {
         return 0;
     }
     
-    // Helper method to get a map of all available units by flat type
+    /**
+     * Gets a map of all available units by flat type.
+     * 
+     * @return A map with flat types as keys and the number of available units as values
+     */
     public Map<FlatType, Integer> getAvailableUnits() {
         Map<FlatType, Integer> availableUnits = new HashMap<>();
         availableUnits.put(FlatType.TWO_ROOM, twoRoomUnitsAvailable);
