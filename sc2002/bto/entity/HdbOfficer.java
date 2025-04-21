@@ -15,18 +15,44 @@ import sc2002.bto.interfaces.IEnquiryManagement;
 import sc2002.bto.repository.ApplicationRepository;
 import sc2002.bto.repository.EnquiryRepository;
 
+/**
+ * Represents an HDB Officer in the BTO Management System.
+ * This class extends the User class and implements IEnquiryManagement and IApplicationProcessing interfaces.
+ * HDB Officers assist in processing applications, booking flats, and handling enquiries.
+ * 
+ */
 public class HdbOfficer extends User implements IEnquiryManagement, IApplicationProcessing {
+    /** The name of the officer */
     private String officerName;
+    /** The project currently handled by this officer */
     private Project handlingProject;
+    /** The project for which the officer has a pending registration */
     private Project pendingProject; 
+    /** The registration status of this officer */
     private OfficerRegistrationStatus registrationStatus;
+    /** Repository for application data */
     private ApplicationRepository applicationRepository;
+    /** Repository for enquiry data */
     private EnquiryRepository enquiryRepository;
-    // new field
+    /** The manager who registered this officer */
     private HdbManager registeringManager;
 
- 
-    
+    /**
+     * Creates a new HDB Officer with the specified details.
+     * 
+     * @param id The officer's NRIC as a unique identifier
+     * @param name The officer's name
+     * @param password The officer's password
+     * @param age The officer's age
+     * @param maritalStatus The officer's marital status
+     * @param officerName The officer's full name
+     * @param pendingProject The project for which the officer has a pending registration
+     * @param handlingProject The project currently handled by this officer
+     * @param regStatus The registration status of this officer
+     * @param registeringManager The manager who registered this officer
+     * @param appRepo The application repository
+     * @param enqRepo The enquiry repository
+     */
     public HdbOfficer(String id, String name, String password, int age, MaritalStatus maritalStatus,
             String officerName, Project pendingProject, Project handlingProject,
             OfficerRegistrationStatus regStatus, HdbManager registeringManager, 
@@ -41,6 +67,12 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     	this.enquiryRepository = enqRepo;
     }
     
+    /**
+     * Registers the officer to handle a project.
+     * 
+     * @param project The project to register for
+     * @return true if registration was successful, false otherwise
+     */
     public boolean registerForProject(Project project) {
         if (this.handlingProject != null) {
             System.out.println("Officer is already assigned to a project: " + handlingProject.getProjectName());
@@ -63,40 +95,11 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         return true;
     }
 
-    
-    // public void viewProjectDetails(Project project) {
-    //     boolean isHandlingProject = (handlingProject != null && handlingProject.equals(project));
-        
-    //     if (!project.isVisible() && !isHandlingProject) {
-    //         System.out.println("Project is not visible and you are not handling this project");
-    //         return;
-    //     }
-        
-    //     if (project != null) {
-    //         System.out.println("Project ID: " + project.getProjectID());
-    //         System.out.println("Neighborhood: " + project.getNeighborhood());
-    //         System.out.println("Available flat types:");
-    //         for (FlatType flatType : project.getFlatType()) {
-    //             System.out.println(" - " + flatType);
-    //         }
-    //         System.out.println("Price per flat: $" + project.getPricePerFlat());
-    //         System.out.println("Threshold price: $" + project.getThresholdPrice());
-    //         System.out.println("Application period: " + project.getApplicationOpenDate() + " to " + project.getApplicationCloseDate());
-    //         System.out.println("Visibility: " + (project.isVisible() ? "Visible" : "Not visible"));
-            
-    //         System.out.println("Units available:");
-    //         System.out.println(" - TWO_ROOM: " + project.getTwoRoomUnitsAvailable());
-    //         System.out.println(" - THREE_ROOM: " + project.getThreeRoomUnitsAvailable());
-            
-    //         if (isHandlingProject) {
-    //             System.out.println("\nYou are currently handling this project.");
-    //             System.out.println("Available officer slots: " + project.getAvailableOfficerSlots());
-    //         }
-    //     } else {
-    //         System.out.println("Project details are not available.");
-    //     } // Error: Dead code
-    // }
-
+    /**
+     * Views the details of a project.
+     * 
+     * @param project The project to view
+     */
     public void viewProjectDetails(Project project) {
         if (project == null) {
             System.out.println("Project details are not available.");
@@ -131,6 +134,13 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         }
     }
     
+    /**
+     * Finds an application by the applicant and project.
+     * 
+     * @param applicant The applicant
+     * @param project The project
+     * @return The application if found, null otherwise
+     */
     private Application findApplicationByApplicant(Applicant applicant, Project project) {
         if (applicant == null || project == null) {
             System.out.println("Error: Applicant and project cannot be null");
@@ -152,6 +162,13 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         return null;
     }
     
+    /**
+     * Books a flat for an applicant.
+     * 
+     * @param applicant The applicant booking the flat
+     * @param flatType The type of flat to book
+     * @return true if booking was successful, false otherwise
+     */
     public boolean bookFlat(Applicant applicant, FlatType flatType) {
         if (applicant == null || flatType == null) {
             System.out.println("Error: Applicant and flat type cannot be null");
@@ -216,6 +233,12 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         return true;
     }
     
+    /**
+     * Generates a receipt for a successful application.
+     * 
+     * @param application The application to generate a receipt for
+     * @return The generated receipt
+     */
     public Receipt generateReceipt(Application application) {
         if (application == null || 
         	    !(application.getStatus() == ApplicationStatus.SUCCESSFUL || application.getStatus() == ApplicationStatus.BOOKED)) {
@@ -379,6 +402,11 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         }
     }
     
+    /**
+     * Gets all enquiries for the project handled by this officer.
+     * 
+     * @return A list of all enquiries for the handled project
+     */
     public List<Enquiry> getAllEnquiries() {
         if (handlingProject == null) {
             return new ArrayList<>();
@@ -387,6 +415,11 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         return enquiryRepository.findByProject(handlingProject);
     }
     
+    /**
+     * Gets pending enquiries for the project handled by this officer.
+     * 
+     * @return A list of pending enquiries for the handled project
+     */
     public List<Enquiry> getPendingEnquiries() {
         if (handlingProject == null) {
             return new ArrayList<>();
@@ -442,6 +475,12 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         System.out.println("Enquiry status updated to: " + e.getStatus());
     }
     
+    /**
+     * Gets detailed information about a project.
+     * 
+     * @param project The project to get details for
+     * @return A map containing the project details
+     */
     public Map<String, Object> getProjectDetails(Project project) {
         Map<String, Object> details = new HashMap<>();
         
@@ -508,12 +547,10 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     public void setRegisteringManager(HdbManager registeringManager) {
         this.registeringManager = registeringManager;
     }
-	
 
-    
-
-
-    // added to fix error in OfficerUI: "The method viewAllEnquiries() is undefined for the type HdbOfficer"
+    /**
+     * Displays all enquiries for the project handled by this officer.
+     */
     public void viewAllEnquiries() {
         List<Enquiry> enquiries = enquiryRepository.findByProject(handlingProject);
         if (enquiries.isEmpty()) {
