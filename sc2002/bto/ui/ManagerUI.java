@@ -21,9 +21,13 @@ import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
 
 /**
- * UI class for HDB Manager users
+ * UI class for HDB Manager users in the BTO system.
+ * Provides functionality for managers to create and manage projects,
+ * approve applications, generate reports, and handle enquiries.
+ * 
  */
 public class ManagerUI extends BaseUserUI {
+    /** The manager user */
     private HdbManager manager;
     
     @Override
@@ -34,12 +38,18 @@ public class ManagerUI extends BaseUserUI {
         return super.run(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
     }
     
+    /**
+     * Displays additional profile information specific to managers.
+     */
     @Override
     protected void displayAdditionalProfileInfo() {
         System.out.println("Manager Name: " + manager.getManagerName());
         System.out.println("Number of Projects Created: " + manager.getProjectsCreated().size());
     }
     
+    /**
+     * Shows the menu options for manager users.
+     */
     @Override
     protected void showMenu() {
         System.out.println("\n===== BTO Management System: Manager Menu =====");
@@ -62,6 +72,12 @@ public class ManagerUI extends BaseUserUI {
         System.out.print("Enter your choice: ");
     }
     
+    /**
+     * Handles menu choices for manager users.
+     * 
+     * @param choice The user's menu selection
+     * @return true if the user wants to logout, false otherwise
+     */
     @Override
     protected boolean handleMenuChoice(String choice) {
         switch (choice) {
@@ -120,7 +136,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Display all projects
+     * Displays all projects in the system.
      */
     private void displayAllProjects() {
         List<Project> allProjects = projectRepo.getAll();
@@ -144,7 +160,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Display manager's projects
+     * Displays projects created by this manager.
      */
     private void displayManagerProjects() {
         List<Project> managerProjects = manager.getProjectsCreated();
@@ -168,7 +184,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Create a new project
+     * Handles the process of creating a new project.
      */
     private void createProject() {
         System.out.println("\n===== Create New Project =====");
@@ -240,7 +256,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Edit an existing project
+     * Handles the process of editing an existing project.
      */
     private void editProject() {
         List<Project> managerProjects = manager.getProjectsCreated();
@@ -338,7 +354,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Delete a project
+     * Handles the process of deleting a project.
      */
     private void deleteProject() {
         List<Project> managerProjects = manager.getProjectsCreated();
@@ -385,7 +401,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Toggle project visibility
+     * Handles the process of toggling a project's visibility.
      */
     private void toggleProjectVisibility() {
         List<Project> managerProjects = manager.getProjectsCreated();
@@ -426,100 +442,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Approve or reject officer registrations
-     */
-    // private void approveOfficerRegistration() {
-    //     // Get all HDB Officers
-    //     List<User> allUsers = userRepo.getAll();
-    //     List<HdbOfficer> allOfficers = allUsers.stream()
-    //                                     .filter(u -> u instanceof HdbOfficer)
-    //                                     .map(u -> (HdbOfficer) u)
-    //                                     .collect(Collectors.toList());
-        
-    //     // Get manager's projects
-    //     List<Project> managerProjects = manager.getProjectsCreated();
-        
-    //     // Detailed logging
-    //     System.out.println("Manager: " + manager.getName());
-    //     System.out.println("Manager's Projects: " + managerProjects.stream()
-    //                                                 .map(Project::getProjectName)
-    //                                                 .collect(Collectors.joining(", ")));
-    //     System.out.println("Total Officers: " + allOfficers.size());
-        
-    //     // Collect pending officer registrations for this manager's projects
-    //     List<HdbOfficer> pendingOfficers = new ArrayList<>();
-        
-    //     for (HdbOfficer officer : allOfficers) {
-    //         // Detailed officer logging
-    //         System.out.println("\nChecking Officer: " + officer.getName());
-    //         System.out.println("  Handling Project: " + 
-    //             (officer.getHandlingProject() != null ? 
-    //              officer.getHandlingProject().getProjectName() : "None"));
-    //         System.out.println("  Registration Status: " + officer.getRegistrationStatus());
-            
-    //         // Check if officer's handling project is one of manager's projects
-    //         if (officer.getHandlingProject() != null) {
-    //             boolean isManagerProject = managerProjects.stream()
-    //                 .anyMatch(p -> p.getProjectID().equals(officer.getHandlingProject().getProjectID()));
-                
-    //             System.out.println("  Is Manager's Project: " + isManagerProject);
-                
-    //             if (isManagerProject && 
-    //                 officer.getRegistrationStatus() == OfficerRegistrationStatus.PENDING) {
-    //                 pendingOfficers.add(officer);
-    //             }
-    //         }
-    //     }
-        
-    //     System.out.println("\nPending Officers for this manager: " + pendingOfficers.size());
-        
-    //     if (pendingOfficers.isEmpty()) {
-    //         System.out.println("No officer applications.");
-    //         return;
-    //     }
-        
-    //     System.out.println("\n===== Pending Officer Registrations =====");
-    //     for (int i = 0; i < pendingOfficers.size(); i++) {
-    //         HdbOfficer o = pendingOfficers.get(i);
-    //         System.out.println((i + 1) + ". Officer Name: " + o.getName());
-    //         System.out.println("   NRIC: " + o.getId());
-    //         System.out.println("   Project: " + o.getHandlingProject().getProjectName());
-    //     }
-        
-    //     System.out.print("Select an officer registration to process: ");
-    //     int officerChoice;
-    //     try {
-    //         officerChoice = Integer.parseInt(scanner.nextLine()) - 1;
-    //     } catch (NumberFormatException e) {
-    //         System.out.println("Invalid input. Please enter a number.");
-    //         return;
-    //     }
-        
-    //     if (officerChoice < 0 || officerChoice >= pendingOfficers.size()) {
-    //         System.out.println("Invalid officer selection.");
-    //         return;
-    //     }
-        
-    //     HdbOfficer selectedOfficer = pendingOfficers.get(officerChoice);
-        
-    //     System.out.print("Approve this registration? (Y/N): ");
-    //     String approve = scanner.nextLine();
-        
-    //     if (approve.equalsIgnoreCase("Y")) {
-    //         // Call manager's method
-    //         manager.approveOfficerRegistration(selectedOfficer);
-    //         System.out.println("Officer registration approved.");
-    //     } else {
-    //         selectedOfficer.setRegistrationStatus(OfficerRegistrationStatus.REJECTED);
-    //         System.out.println("Officer registration rejected.");
-    //     }
-        
-    //     // Update officer in repository
-    //     userRepo.update(selectedOfficer);
-    // }
-
-    /**
-     * Approve or reject officer registrations
+     * Handles the process of approving or rejecting officer registrations.
      */
     private void approveOfficerRegistration() {
         // Get all HDB Officers
@@ -583,7 +506,7 @@ public class ManagerUI extends BaseUserUI {
 
     
     /**
-     * Handle withdrawal requests
+     * Handles the process of managing withdrawal requests.
      */
     private void handleWithdrawalRequests() {
         // Get applications with withdrawal requests for projects managed by this manager
@@ -637,7 +560,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Generate reports
+     * Handles the process of generating reports.
      */
     private void generateReports() {
         System.out.println("\n===== Generate Reports =====");
@@ -673,7 +596,7 @@ public class ManagerUI extends BaseUserUI {
     }
     
     /**
-     * Respond to enquiries for projects managed by this manager
+     * Handles the process of responding to enquiries.
      */
     private void respondToEnquiry() {
         // Get pending enquiries for projects managed by this manager
