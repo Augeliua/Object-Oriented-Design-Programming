@@ -3,7 +3,6 @@ package sc2002.bto.ui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import sc2002.bto.entity.Applicant;
 import sc2002.bto.entity.Enquiry;
 import sc2002.bto.entity.Project;
@@ -17,9 +16,13 @@ import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
 
 /**
- * UI class for Applicant users
+ * UI class for Applicant users in the BTO system.
+ * Provides functionality for applicants to view projects, submit applications,
+ * manage enquiries, and request withdrawals.
+ * 
  */
 public class ApplicantUI extends BaseUserUI {
+    /** The applicant user */
     private Applicant applicant;
     
     @Override
@@ -30,6 +33,9 @@ public class ApplicantUI extends BaseUserUI {
         return super.run(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
     }
     
+    /**
+     * Displays additional profile information specific to applicants.
+     */
     @Override
     protected void displayAdditionalProfileInfo() {
         System.out.println("Income Range: $" + applicant.getIncomeRange());
@@ -39,6 +45,9 @@ public class ApplicantUI extends BaseUserUI {
         }
     }
     
+    /**
+     * Shows the menu options for applicant users.
+     */
     @Override
     protected void showMenu() {
         System.out.println("\n===== BTO Management System: Applicant Menu =====");
@@ -54,6 +63,12 @@ public class ApplicantUI extends BaseUserUI {
         System.out.print("Enter your choice: ");
     }
     
+    /**
+     * Handles menu choices for applicant users.
+     * 
+     * @param choice The user's menu selection
+     * @return true if the user wants to logout, false otherwise
+     */
     @Override
     protected boolean handleMenuChoice(String choice) {
         switch (choice) {
@@ -99,7 +114,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Display eligible projects for the applicant
+     * Displays projects that the applicant is eligible to apply for.
      */
     private void displayEligibleProjects() {
         List<Project> eligibleProjects = applicant.viewEligibleProjects(projectRepo);
@@ -117,7 +132,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Apply for a project
+     * Handles the process of applying for a project.
      */
     private void applyForProject() {
         // Get eligible projects
@@ -207,7 +222,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Request withdrawal of application
+     * Handles the process of requesting withdrawal of an application.
      */
     private void requestWithdrawal() {
         if (applicant.requestWithdrawal(applicationRepo)) {
@@ -216,7 +231,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Submit an enquiry
+     * Handles the process of submitting an enquiry.
      */
     private void submitEnquiry() {
         // Show all visible projects
@@ -269,7 +284,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * View and manage enquiries
+     * Displays the applicant's enquiries and provides options to manage them.
      */
     private void viewMyEnquiries() {
         List<Enquiry> myEnquiries = applicant.viewMyEnquiries(enquiryRepo);
@@ -308,7 +323,9 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Edit an enquiry
+     * Handles the process of editing an enquiry.
+     * 
+     * @param myEnquiries List of the applicant's enquiries
      */
     private void editEnquiry(List<Enquiry> myEnquiries) {
         System.out.print("Enter enquiry number to edit: ");
@@ -345,7 +362,9 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Delete an enquiry
+     * Handles the process of deleting an enquiry.
+     * 
+     * @param myEnquiries List of the applicant's enquiries
      */
     private void deleteEnquiry(List<Enquiry> myEnquiries) {
         System.out.print("Enter enquiry number to delete: ");
