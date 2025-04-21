@@ -3,15 +3,25 @@ package sc2002.bto.entity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import sc2002.bto.enums.ReportType;
-
+/**
+ * Represents a report generated in the BTO system.
+ * Reports can contain various types of data depending on the report type.
+ * 
+ */
 public class Report {
+    /** Unique identifier for this report */
     private String reportId;
+    /** The type of this report */
     private ReportType reportType;
+    /** List of items included in this report */
     private List<Object> items;
+    /** Date when this report was generated */
     private String generatedDate;
     
+    /**
+     * Creates a new report with a generated ID and current date.
+     */
     public Report() {
         this.reportId = "REP-" + System.currentTimeMillis();
         this.items = new ArrayList<>();
@@ -50,6 +60,11 @@ public class Report {
         this.generatedDate = generatedDate;
     }
     
+    /**
+     * Gets the report content as a formatted string.
+     * 
+     * @return A string containing the report content
+     */
     public String getReportAsString() {
         StringBuilder sb = new StringBuilder();
         sb.append("=====================\n");
@@ -80,13 +95,18 @@ public class Report {
         return sb.toString();
     }
     
-    // added to solve error in ManagerUI: The method printReport() is undefined for the type Report
+    /**
+     * Prints the report to the console.
+     */
     public void printReport() {
         System.out.println(this.getReportAsString());
     }
     
-    // @SuppressWarnings("unchecked")
-    // Unnecessary @SuppressWarnings("unchecked")
+    /**
+     * Formats an all bookings report.
+     * 
+     * @param sb The StringBuilder to append the report content to
+     */
    private void formatAllBookingsReport(StringBuilder sb) {
         sb.append("\nAll Bookings Report\n");
         sb.append("------------------\n");
@@ -118,6 +138,11 @@ public class Report {
         }
     }
     
+    /**
+     * Formats a report of bookings by flat type.
+     * 
+     * @param sb The StringBuilder to append the report content to
+     */
     @SuppressWarnings("unchecked")
     private void formatByFlatTypeReport(StringBuilder sb) {
         sb.append("\nBookings by Flat Type Report\n");
@@ -162,8 +187,11 @@ public class Report {
         }
     }
     
-    // @SuppressWarnings("unchecked")
-    // Unnecessary @SuppressWarnings("unchecked")
+    /**
+     * Formats a report of bookings by marital status.
+     * 
+     * @param sb The StringBuilder to append the report content to
+     */
     private void formatByMaritalStatusReport(StringBuilder sb) {
         sb.append("\nBookings by Marital Status Report\n");
         sb.append("-------------------------------\n");
@@ -197,7 +225,9 @@ public class Report {
         }
     }
 
-    // changed printAllBookings() from private to public to solve error: The method printAllBookings() from the type Report is never used locally
+    /**
+     * Prints all booking information to the console.
+     */
     public void printAllBookings() { 
         System.out.println("\nAll Bookings Report");
         System.out.println("------------------");
