@@ -9,23 +9,38 @@ import sc2002.bto.repository.UserRepository;
 import sc2002.bto.util.FileHandler;
 
 /**
- * Base class for all user interface classes
- * Contains common functionality shared by all user types
+ * Abstract base class for all user interface classes in the BTO system.
+ * Contains common functionality shared by all user types including
+ * profile viewing and password changing.
+ * 
  */
 public abstract class BaseUserUI {
+    /** Scanner for reading user input */
     protected Scanner scanner;
+    /** Currently logged in user */
     protected User currentUser;
+    /** Repository for user data */
     protected UserRepository userRepo;
+    /** Repository for project data */
     protected ProjectRepository projectRepo;
+    /** Repository for application data */
     protected ApplicationRepository applicationRepo;
+    /** Repository for enquiry data */
     protected EnquiryRepository enquiryRepo;
+    
     
     public BaseUserUI() {
         this.scanner = new Scanner(System.in);
     }
     
     /**
-     * Initialize repositories and current user
+     * Initializes repositories and current user.
+     * 
+     * @param user Currently logged in user
+     * @param userRepo Repository for user data
+     * @param projectRepo Repository for project data
+     * @param applicationRepo Repository for application data
+     * @param enquiryRepo Repository for enquiry data
      */
     protected void initialize(User user, UserRepository userRepo, ProjectRepository projectRepo, 
                               ApplicationRepository applicationRepo, EnquiryRepository enquiryRepo) {
@@ -51,7 +66,8 @@ public abstract class BaseUserUI {
     }
     
     /**
-     * Display additional profile information specific to each user type
+     * Displays additional profile information specific to each user type.
+     * Each subclass must implement this to show role-specific information.
      */
     protected abstract void displayAdditionalProfileInfo();
     
@@ -88,13 +104,15 @@ public abstract class BaseUserUI {
     }
     
     /**
-     * Display menu for the specific user type
+     * Shows the menu options specific to each user type.
+     * Each subclass must implement this to display appropriate menu items.
      */
     protected abstract void showMenu();
     
     /**
-     * Handle menu choice for the specific user type
-     * @param choice The user's menu choice
+     * Handles menu choices for the specific user type.
+     * 
+     * @param choice The user's menu selection
      * @return true if the user wants to logout, false otherwise
      */
     protected abstract boolean handleMenuChoice(String choice);
