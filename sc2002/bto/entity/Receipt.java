@@ -1,25 +1,57 @@
 package sc2002.bto.entity;
 
 import sc2002.bto.enums.FlatType;
-
+/**
+ * Represents a receipt for a successful flat booking in the BTO system.
+ * Contains applicant details, project information, and booking information.
+ * 
+ */
 public class Receipt {
-    private static int receiptCounter = 0;
+     /** Counter for generating unique receipt IDs */
+     private static int receiptCounter = 0;
     
-    private String receiptID;
-    private String name;
-    private String nric;
-    private int age;
-    private String maritalStatus;
-    private String projectID;
-    private String neighborhood;
-    private double pricePerFlat;
-    private FlatType flatType;
-    private String bookingDate;
-    
+     /** Unique identifier for this receipt */
+     private String receiptID;
+     /** Name of the applicant */
+     private String name;
+     /** NRIC of the applicant */
+     private String nric;
+     /** Age of the applicant */
+     private int age;
+     /** Marital status of the applicant */
+     private String maritalStatus;
+     /** ID of the project */
+     private String projectID;
+     /** Neighborhood of the project */
+     private String neighborhood;
+     /** Price per flat unit */
+     private double pricePerFlat;
+     /** Type of flat booked */
+     private FlatType flatType;
+     /** Date of booking */
+     private String bookingDate;
+     
+     /**
+      * Creates a new receipt with a generated ID.
+      */
     public Receipt() {
         this.receiptID = generateNextReceiptID();
     }
     
+    /**
+     * Creates a new receipt with the specified details.
+     * 
+     * @param id Receipt ID
+     * @param name Applicant name
+     * @param nric Applicant NRIC
+     * @param age Applicant age
+     * @param maritalStatus Applicant marital status
+     * @param projID Project ID
+     * @param neighborhood Project neighborhood
+     * @param price Price per flat
+     * @param f Flat type
+     * @param date Booking date
+     */
     public Receipt(String id, String name, String nric, int age, String maritalStatus, 
                   String projID, String neighborhood, double price, FlatType f, String date) {
         this.receiptID = id;
@@ -34,6 +66,11 @@ public class Receipt {
         this.bookingDate = date;
     }
     
+    /**
+     * Generates a unique receipt ID.
+     * 
+     * @return A new unique receipt ID
+     */
     private synchronized String generateNextReceiptID() {
         receiptCounter++;
         return String.format("RCPT-%05d", receiptCounter);
@@ -120,7 +157,8 @@ public class Receipt {
     }
     
     /**
-     * Gets the receipt details as a formatted string
+     * Gets the receipt details as a formatted string.
+     * 
      * @return A string containing all the receipt details
      */
     public String getReceiptDetailsAsString() {
@@ -148,6 +186,9 @@ public class Receipt {
         return sb.toString();
     }
 
+    /**
+     * Prints the receipt details to the console.
+     */
     public void printReceiptDetails() {
         System.out.println(getReceiptDetailsAsString());
     }
