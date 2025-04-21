@@ -18,12 +18,30 @@ import sc2002.bto.repository.ApplicationRepository;
 import sc2002.bto.repository.EnquiryRepository;
 import sc2002.bto.repository.ProjectRepository;
 
+/**
+ * Represents an HDB Manager in the BTO Management System.
+ * This class extends the Applicant class and implements IProjectManagement and IEnquiryManagement interfaces.
+ * HDB Managers are responsible for creating, editing, and managing BTO projects,
+ * approving applications, and handling enquiries.
+ * 
+ */
 public class HdbManager extends Applicant implements IProjectManagement, IEnquiryManagement {
-    // Fields
+    /** The name of the manager */
     private String managerName;
+    /** List of projects created by this manager */
     private List<Project> projectsCreated;
     
-    // Constructor
+    /**
+     * Creates a new HDB Manager with the specified details.
+     * 
+     * @param id The manager's NRIC as a unique identifier
+     * @param name The manager's name
+     * @param password The manager's password
+     * @param age The manager's age
+     * @param maritalStatus The manager's marital status
+     * @param applicantName The manager's full name
+     * @param incomeRange The manager's income range
+     */
     public HdbManager(String id, String name, String password, int age, MaritalStatus maritalStatus, 
                       String applicantName, Double incomeRange) {
         super(id, name, password, age, maritalStatus, applicantName, incomeRange);
@@ -31,7 +49,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         this.projectsCreated = new ArrayList<>();
     }
     
-    // Methods from UML diagram
+    /**
+     * Creates a new BTO project.
+     * 
+     * @param project The project to create
+     * @param projectRepo The project repository
+     */
     public void createProject(Project project, ProjectRepository projectRepo) {
         // Set the manager in charge
         project.setManagerInCharge(this.managerName);
@@ -55,6 +78,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         System.out.println("Project created successfully: " + project.getProjectID());
     }
     
+    /**
+     * Parses a date string into a Date object.
+     * 
+     * @param dateStr Date string in format yyyy-MM-dd
+     * @return A Date object representing the parsed date
+     */
     private Date parseDate(String dateStr) {
         try {
             return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
@@ -63,6 +92,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
+    /**
+     * Edits an existing project's details.
+     * 
+     * @param project The project with updated information
+     */
     public void editProject(Project project) {
         for (int i = 0; i < projectsCreated.size(); i++) {
             if (projectsCreated.get(i).getProjectID().equals(project.getProjectID())) {
@@ -73,7 +107,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
         System.out.println("Project not found.");
     }
-    
+
+    /**
+     * Deletes an existing project.
+     * 
+     * @param project The project to delete
+     */
     public void deleteProject(Project project) {
         boolean removed = projectsCreated.removeIf(p -> p.getProjectID().equals(project.getProjectID()));
         if (removed) {
@@ -83,6 +122,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
+    /**
+     * Toggles the visibility of a project.
+     * 
+     * @param project The project to toggle visibility for
+     */
     public void toggleProjectVisibility(Project project) {
         for (Project p : projectsCreated) {
             if (p.getProjectID().equals(project.getProjectID())) {
@@ -94,10 +138,21 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         System.out.println("Project not found.");
     }
     
+    /**
+     * Views all projects in the system.
+     * 
+     * @param projectRepo The project repository
+     * @return A list of all projects
+     */
     public List<Project> viewAllProjects(ProjectRepository projectRepo) {
         return projectRepo.getAll();
     }
     
+    /**
+     * Approves an HDB Officer's registration to handle a project.
+     * 
+     * @param officer The HDB Officer to approve
+     */
     public void approveOfficerRegistration(HdbOfficer officer) {
         Project targetProject = officer.getPendingProject(); // ✅ changed from getHandlingProject()
 
@@ -134,7 +189,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
 
-    
+    /**
+     * Approves or rejects an application for a BTO project.
+     * 
+     * @param application The application to approve or reject
+     * @param projectRepo The project repository
+     */
     public void approveApplication(Application application, ProjectRepository projectRepo) {
         Project project = application.getProject();
         FlatType type = application.getSelectedFlatType();
@@ -158,6 +218,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
+    /**
+     * Reviews pending applications for projects created by this manager.
+     * 
+     * @param appRepo The application repository
+     * @param projectRepo The project repository
+     */
     public void reviewApplications(ApplicationRepository appRepo, ProjectRepository projectRepo) {
         List<Application> all = appRepo.getAll();
         
@@ -250,6 +316,13 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         System.out.println("\nApplication review completed.");
     } 
     
+    /**
+     * Generates a report based on the specified report type.
+     * 
+     * @param reportType The type of report to generate
+     * @param appRepo The application repository
+     * @return The generated report
+     */
     public Report generateReport(ReportType reportType, ApplicationRepository appRepo) {
         // Create a new report
         Report report = new Report();
@@ -309,7 +382,18 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
-    // Create a new project with details
+    /**
+     * Creates a new project with the specified details.
+     * 
+     * @param projectName The name of the project
+     * @param neighborhood The neighborhood where the project is located
+     * @param flatTypes Array of flat types available in this project
+     * @param twoRoomUnits Number of 2-room units
+     * @param threeRoomUnits Number of 3-room units
+     * @param openDate Application opening date
+     * @param closeDate Application closing date
+     * @param projectRepo The project repository
+     */
     public void createProject(String projectName, String neighborhood, FlatType[] flatTypes, 
                              int twoRoomUnits, int threeRoomUnits, String openDate, String closeDate, ProjectRepository projectRepo) {
         Project project = new Project(
@@ -376,7 +460,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         return new ArrayList<>(projectsCreated);
     }
     
-    // Handle applicant's withdrawal request
+    /**
+     * Handles an applicant's withdrawal request.
+     * 
+     * @param application The application to withdraw
+     * @param approve Whether to approve the withdrawal request
+     */
     public void handleWithdrawalRequest(Application application, boolean approve) {
         if (approve) {
             Project project = application.getProject();
@@ -473,7 +562,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
-    // Check if manager is handling any active projects
+    /**
+     * Checks if the manager is handling any active projects.
+     * 
+     * @return true if the manager is handling an active project, false otherwise
+     */
     public boolean isHandlingActiveProject() {
         Date currentDate = new Date();
         return projectsCreated.stream().anyMatch(p -> 
@@ -498,7 +591,9 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         this.projectsCreated = projectsCreated;
     }
     
-    // Override application method from Applicant to prevent HDB Managers from applying
+    /**
+     * Overrides the submitApplication method from Applicant to prevent managers from applying for BTO projects.
+     */
     @Override
     public void submitApplication(Project project, FlatType flatType, ApplicationRepository appRepo, ProjectRepository projectRepo) {
         System.out.println("HDB Managers cannot apply for BTO projects.");
