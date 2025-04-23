@@ -24,15 +24,34 @@ import sc2002.bto.repository.UserRepository;
 public class OfficerUI extends BaseUserUI {
     /** The officer user */
     private HdbOfficer officer;
-    
+
+    /**
+     * Constructs a new OfficerUI instance.
+     * Initializes a UI controller for officer users.
+     */
+    public OfficerUI() {
+        super();
+    }
+
+    /**
+     * Initializes the OfficerUI with the current user and repositories,
+     * then runs the UI loop.
+     * 
+     * @param user            The officer user
+     * @param userRepo        The repository containing all users
+     * @param projectRepo     The repository containing all projects
+     * @param applicationRepo The repository containing all applications
+     * @param enquiryRepo     The repository containing all enquiries
+     * @return true if the application should exit, false to return to login
+     */
     @Override
-    public boolean run(User user, UserRepository userRepo, ProjectRepository projectRepo, 
-                      ApplicationRepository applicationRepo, EnquiryRepository enquiryRepo) {
+    public boolean run(User user, UserRepository userRepo, ProjectRepository projectRepo,
+            ApplicationRepository applicationRepo, EnquiryRepository enquiryRepo) {
         super.initialize(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
         this.officer = (HdbOfficer) user;
         return super.run(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
     }
-    
+
     /**
      * Displays additional profile information specific to officers.
      */
@@ -44,7 +63,7 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Registration Status: " + officer.getRegistrationStatus());
         }
     }
-    
+
     /**
      * Shows the menu options for officer users.
      */
@@ -65,7 +84,7 @@ public class OfficerUI extends BaseUserUI {
         System.out.println("12. Logout");
         System.out.print("Enter your choice: ");
     }
-    
+
     /**
      * Handles menu choices for officer users.
      * 
@@ -116,50 +135,65 @@ public class OfficerUI extends BaseUserUI {
                 return false;
         }
     }
-    
+
     /**
-     * Displays all projects in the system.
+     * Displays all projects with filtering capabilities for the HDB Officer.
+     * This method:
+     * 1. Retrieves all projects from the repository
+     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+     * 3. Displays the filtered list with options to further refine filters
+     * 
+     * Filter settings persist between menu navigations to maintain a consistent
+     * user experience. The officer can view all projects regardless of visibility
+     * settings, unlike applicants who can only see visible projects.
      */
     private void displayAllProjects() {
         List<Project> allProjects = projectRepo.getAll();
-        
+
         if (allProjects.isEmpty()) {
             System.out.println("No projects available.");
             return;
         }
-        
-        System.out.println("\n===== All Projects =====");
-        for (int i = 0; i < allProjects.size(); i++) {
-            Project p = allProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
-            System.out.println("   Visibility: " + (p.isVisible() ? "Visible" : "Hidden"));
-            System.out.println("   Application Period: " + p.getApplicationOpenDate() + " to " + p.getApplicationCloseDate());
-            System.out.println("   Available Units:");
-            System.out.println("   - 2-Room: " + p.getTwoRoomUnitsAvailable());
-            System.out.println("   - 3-Room: " + p.getThreeRoomUnitsAvailable());
-            System.out.println();
-        }
+
+        // Use the base class method to display filtered projects
+        displayFilteredProjects("All Projects", allProjects);
     }
-    
+
     /**
-     * Displays detailed information about a selected project.
+     * Allows the officer to view detailed information about a selected project with
+     * filtering support.
+     * This method:
+     * 1. Retrieves all projects from the repository
+     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+     * 3. Displays the filtered list with options to further refine filters
+     * 4. Prompts the officer to select a project from the filtered list
+     * 5. Displays detailed information about the selected project
+     * 
+     * Filter settings persist between menu navigations to maintain a consistent
+     * user experience. Officers can see additional project details that are not
+     * visible to regular applicants, especially for projects they are handling.
      */
     private void displayProjectDetails() {
         // First show all projects
         List<Project> allProjects = projectRepo.getAll();
-        
+
         if (allProjects.isEmpty()) {
             System.out.println("No projects available.");
             return;
         }
-        
-        System.out.println("\n===== Projects =====");
-        for (int i = 0; i < allProjects.size(); i++) {
-            Project p = allProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
+
+        // Display projects with filters
+        displayFilteredProjects("Projects", allProjects);
+
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(allProjects);
+
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
+            return;
         }
-        
-        System.out.print("Select a project to view details: ");
+
+        System.out.print("\nSelect a project to view details: ");
         int projectChoice;
         try {
             projectChoice = Integer.parseInt(scanner.nextLine()) - 1;
@@ -167,40 +201,54 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
-        if (projectChoice < 0 || projectChoice >= allProjects.size()) {
+
+        if (projectChoice < 0 || projectChoice >= filteredProjects.size()) {
             System.out.println("Invalid project selection.");
             return;
         }
-        
-        Project selectedProject = allProjects.get(projectChoice);
-        
+
+        Project selectedProject = filteredProjects.get(projectChoice);
+
         // Use officer's viewProjectDetails method
         officer.viewProjectDetails(selectedProject);
     }
-    
+
     /**
-     * Handles the process of registering for a project.
+     * Allows the officer to register to handle a project with filtering support.
+     * This method:
+     * 1. Retrieves all projects with available officer slots
+     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+     * 3. Displays the filtered list with options to further refine filters
+     * 4. Prompts the officer to select a project from the filtered list
+     * 5. Submits a registration request for the selected project
+     * 
+     * Filter settings persist between menu navigations to maintain a consistent
+     * user experience. The registration request will require approval from the
+     * HDB Manager in charge of the selected project.
      */
     private void registerForProject() {
         // First show all projects with vacancies for officers
         List<Project> availableProjects = projectRepo.getAll().stream()
-                                         .filter(p -> p.getAvailableOfficerSlots() > 0)
-                                         .collect(Collectors.toList());
-        
+                .filter(p -> p.getAvailableOfficerSlots() > 0)
+                .collect(Collectors.toList());
+
         if (availableProjects.isEmpty()) {
             System.out.println("No projects available for registration.");
             return;
         }
-        
-        System.out.println("\n===== Available Projects for Registration =====");
-        for (int i = 0; i < availableProjects.size(); i++) {
-            Project p = availableProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
-            System.out.println("   Available Officer Slots: " + p.getAvailableOfficerSlots());
+
+        // Display available projects with filters
+        displayFilteredProjects("Available Projects for Registration", availableProjects);
+
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(availableProjects);
+
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
+            return;
         }
-        
-        System.out.print("Select a project to register for: ");
+
+        System.out.print("\nSelect a project to register for: ");
         int projectChoice;
         try {
             projectChoice = Integer.parseInt(scanner.nextLine()) - 1;
@@ -208,23 +256,23 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
-        if (projectChoice < 0 || projectChoice >= availableProjects.size()) {
+
+        if (projectChoice < 0 || projectChoice >= filteredProjects.size()) {
             System.out.println("Invalid project selection.");
             return;
         }
-        
-        Project selectedProject = availableProjects.get(projectChoice);
-        
+
+        Project selectedProject = filteredProjects.get(projectChoice);
+
         // Call officer's method
         boolean registrationResult = officer.registerForProject(selectedProject);
-        
+
         if (registrationResult) {
             System.out.println("Registration request submitted successfully for " + selectedProject.getProjectName());
             System.out.println("Your registration status is pending approval from the manager.");
         }
     }
-    
+
     /**
      * Handles the process of processing an application.
      */
@@ -233,18 +281,18 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("You are not handling any project yet.");
             return;
         }
-        
+
         // Get applications for the officer's handling project
         List<Application> projectApplications = applicationRepo.getAll().stream()
-                                              .filter(a -> a.getProject() != null && 
-                                                       a.getProject().equals(officer.getHandlingProject()))
-                                              .collect(Collectors.toList());
-        
+                .filter(a -> a.getProject() != null &&
+                        a.getProject().equals(officer.getHandlingProject()))
+                .collect(Collectors.toList());
+
         if (projectApplications.isEmpty()) {
             System.out.println("No applications found for your handling project.");
             return;
         }
-        
+
         System.out.println("\n===== Applications for " + officer.getHandlingProject().getProjectName() + " =====");
         for (int i = 0; i < projectApplications.size(); i++) {
             Application a = projectApplications.get(i);
@@ -253,7 +301,7 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("   Flat Type: " + a.getSelectedFlatType());
             System.out.println("   Status: " + a.getStatus());
         }
-        
+
         System.out.print("Select an application to process: ");
         int appChoice;
         try {
@@ -262,18 +310,18 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
+
         if (appChoice < 0 || appChoice >= projectApplications.size()) {
             System.out.println("Invalid application selection.");
             return;
         }
-        
+
         Application selectedApplication = projectApplications.get(appChoice);
-        
+
         // Call officer's method
         officer.processApplication(selectedApplication);
     }
-    
+
     /**
      * Handles the process of generating a receipt.
      */
@@ -282,20 +330,19 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("You are not handling any project yet.");
             return;
         }
-        
+
         // Get applications with status SUCCESSFUL for the officer's handling project
         List<Application> successfulApplications = applicationRepo.getAll().stream()
-        	    .filter(a -> a.getProject() != null && 
-        	                a.getProject().equals(officer.getHandlingProject()) &&
-        	                (a.getStatus() == ApplicationStatus.SUCCESSFUL || a.getStatus() == ApplicationStatus.BOOKED))
-        	    .collect(Collectors.toList());
+                .filter(a -> a.getProject() != null &&
+                        a.getProject().equals(officer.getHandlingProject()) &&
+                        (a.getStatus() == ApplicationStatus.SUCCESSFUL || a.getStatus() == ApplicationStatus.BOOKED))
+                .collect(Collectors.toList());
 
-        
         if (successfulApplications.isEmpty()) {
             System.out.println("No successful applications found for receipt generation.");
             return;
         }
-        
+
         System.out.println("\n===== Successful Applications =====");
         for (int i = 0; i < successfulApplications.size(); i++) {
             Application a = successfulApplications.get(i);
@@ -303,7 +350,7 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("   Applicant: " + a.getApplicant().getName());
             System.out.println("   Flat Type: " + a.getSelectedFlatType());
         }
-        
+
         System.out.print("Select an application to generate receipt: ");
         int appChoice;
         try {
@@ -312,22 +359,22 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
+
         if (appChoice < 0 || appChoice >= successfulApplications.size()) {
             System.out.println("Invalid application selection.");
             return;
         }
-        
+
         Application selectedApplication = successfulApplications.get(appChoice);
-        
+
         // Call officer's method
         Receipt receipt = officer.generateReceipt(selectedApplication);
-        
+
         if (receipt != null) {
             System.out.println("Receipt generated successfully with ID: " + receipt.getReceiptID());
         }
     }
-    
+
     /**
      * Handles the process of responding to an enquiry.
      */
@@ -336,17 +383,17 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("You are not handling any project yet.");
             return;
         }
-        
+
         // Get pending enquiries for the officer's handling project
         List<Enquiry> pendingEnquiries = enquiryRepo.findByProject(officer.getHandlingProject()).stream()
-                                        .filter(e -> e.getStatus() == EnquiryStatus.PENDING)
-                                        .collect(Collectors.toList());
-        
+                .filter(e -> e.getStatus() == EnquiryStatus.PENDING)
+                .collect(Collectors.toList());
+
         if (pendingEnquiries.isEmpty()) {
             System.out.println("No pending enquiries found for your handling project.");
             return;
         }
-        
+
         System.out.println("\n===== Pending Enquiries =====");
         for (int i = 0; i < pendingEnquiries.size(); i++) {
             Enquiry e = pendingEnquiries.get(i);
@@ -354,7 +401,7 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("   From: " + e.getApplicant().getName());
             System.out.println("   Message: " + e.getMessage());
         }
-        
+
         System.out.print("Select an enquiry to respond to: ");
         int enquiryChoice;
         try {
@@ -363,25 +410,25 @@ public class OfficerUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
+
         if (enquiryChoice < 0 || enquiryChoice >= pendingEnquiries.size()) {
             System.out.println("Invalid enquiry selection.");
             return;
         }
-        
+
         Enquiry selectedEnquiry = pendingEnquiries.get(enquiryChoice);
-        
+
         System.out.println("Enter your response:");
         String response = scanner.nextLine();
-        
+
         if (response.trim().isEmpty()) {
             System.out.println("Response cannot be empty.");
             return;
         }
-        
+
         // Call officer's method
         officer.respondToEnquiry(selectedEnquiry, response);
-        
+
         System.out.println("Response submitted successfully.");
     }
 }
