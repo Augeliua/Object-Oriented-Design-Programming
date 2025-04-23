@@ -16,13 +16,9 @@ import sc2002.bto.repository.ProjectRepository;
 import sc2002.bto.repository.UserRepository;
 
 /**
- * UI class for Applicant users in the BTO system.
- * Provides functionality for applicants to view projects, submit applications,
- * manage enquiries, and request withdrawals.
- * 
+ * UI class for Applicant users with filtering capabilities
  */
 public class ApplicantUI extends BaseUserUI {
-    /** The applicant user */
     private Applicant applicant;
     
     @Override
@@ -33,9 +29,6 @@ public class ApplicantUI extends BaseUserUI {
         return super.run(user, userRepo, projectRepo, applicationRepo, enquiryRepo);
     }
     
-    /**
-     * Displays additional profile information specific to applicants.
-     */
     @Override
     protected void displayAdditionalProfileInfo() {
         System.out.println("Income Range: $" + applicant.getIncomeRange());
@@ -45,9 +38,6 @@ public class ApplicantUI extends BaseUserUI {
         }
     }
     
-    /**
-     * Shows the menu options for applicant users.
-     */
     @Override
     protected void showMenu() {
         System.out.println("\n===== BTO Management System: Applicant Menu =====");
@@ -63,12 +53,6 @@ public class ApplicantUI extends BaseUserUI {
         System.out.print("Enter your choice: ");
     }
     
-    /**
-     * Handles menu choices for applicant users.
-     * 
-     * @param choice The user's menu selection
-     * @return true if the user wants to logout, false otherwise
-     */
     @Override
     protected boolean handleMenuChoice(String choice) {
         switch (choice) {
@@ -114,7 +98,14 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Displays projects that the applicant is eligible to apply for.
+     * Displays eligible projects for the applicant with filtering capabilities.
+     * This method:
+     * 1. Retrieves all projects that the current applicant is eligible for
+     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+     * 3. Displays the filtered list with options to further refine filters
+     * 
+     * Filter settings persist between menu navigations to maintain a consistent
+     * user experience.
      */
     private void displayEligibleProjects() {
         List<Project> eligibleProjects = applicant.viewEligibleProjects(projectRepo);
@@ -124,17 +115,34 @@ public class ApplicantUI extends BaseUserUI {
             return;
         }
         
-        System.out.println("\n===== Eligible Projects =====");
-        for (int i = 0; i < eligibleProjects.size(); i++) {
-            Project p = eligibleProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
-        }
+        // Use the base class method to display filtered projects
+        displayFilteredProjects("Eligible Projects", eligibleProjects);
     }
     
     /**
-     * Handles the process of applying for a project.
+     * Allows the applicant to apply for a project with filtering support.
+     * This method:
+     * 1. Retrieves all projects that the current applicant is eligible for
+     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+     * 3. Displays the filtered list with options to further refine filters
+     * 4. Prompts the user to select a project from the filtered list
+     * 5. Shows available flat types for the selected project based on eligibility
+     * 6. Submits the application with the selected project and flat type
+     * 
+     * Filter settings persist between menu navigations to maintain a consistent
+     * user experience, even if the user returns to the main menu before completing
+     * the application process.
      */
     private void applyForProject() {
+        // Check if already has a booked flat
+        boolean hasBooked = applicationRepo.getAll().stream()
+            .anyMatch(a -> a.getApplicant().equals(applicant) && a.getStatus() == ApplicationStatus.BOOKED);
+
+        if (hasBooked) {
+            System.out.println("You have already booked a flat. Cannot apply for another.");
+            return;
+        }
+        
         // Get eligible projects
         List<Project> eligibleProjects = applicant.viewEligibleProjects(projectRepo);
         
@@ -143,15 +151,19 @@ public class ApplicantUI extends BaseUserUI {
             return;
         }
         
-        // Display eligible projects
-        System.out.println("\n===== Available Projects =====");
-        for (int i = 0; i < eligibleProjects.size(); i++) {
-            Project p = eligibleProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
+        // Display eligible projects with filters
+        displayFilteredProjects("Available Projects", eligibleProjects);
+        
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(eligibleProjects);
+        
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
+            return;
         }
         
         // Get user selection
-        System.out.print("Select a project number: ");
+        System.out.print("\nSelect a project number: ");
         int projectChoice;
         try {
             projectChoice = Integer.parseInt(scanner.nextLine()) - 1;
@@ -160,12 +172,12 @@ public class ApplicantUI extends BaseUserUI {
             return;
         }
         
-        if (projectChoice < 0 || projectChoice >= eligibleProjects.size()) {
+        if (projectChoice < 0 || projectChoice >= filteredProjects.size()) {
             System.out.println("Invalid project selection.");
             return;
         }
         
-        Project selectedProject = eligibleProjects.get(projectChoice);
+        Project selectedProject = filteredProjects.get(projectChoice);
         
         // Get available flat types based on marital status
         List<FlatType> availableFlatTypes = new ArrayList<>();
@@ -222,7 +234,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Handles the process of requesting withdrawal of an application.
+     * Request withdrawal of application
      */
     private void requestWithdrawal() {
         if (applicant.requestWithdrawal(applicationRepo)) {
@@ -231,7 +243,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Handles the process of submitting an enquiry.
+     * Submit an enquiry with project filtering
      */
     private void submitEnquiry() {
         // Show all visible projects
@@ -244,15 +256,19 @@ public class ApplicantUI extends BaseUserUI {
             return;
         }
         
-        // Display projects
-        System.out.println("\n===== Projects =====");
-        for (int i = 0; i < visibleProjects.size(); i++) {
-            Project p = visibleProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
+        // Display projects with filtering
+        displayFilteredProjects("Projects", visibleProjects);
+        
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(visibleProjects);
+        
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
+            return;
         }
         
         // Get project selection
-        System.out.print("Select a project for your enquiry: ");
+        System.out.print("\nSelect a project for your enquiry: ");
         int projectChoice;
         try {
             projectChoice = Integer.parseInt(scanner.nextLine()) - 1;
@@ -261,12 +277,12 @@ public class ApplicantUI extends BaseUserUI {
             return;
         }
         
-        if (projectChoice < 0 || projectChoice >= visibleProjects.size()) {
+        if (projectChoice < 0 || projectChoice >= filteredProjects.size()) {
             System.out.println("Invalid project selection.");
             return;
         }
         
-        Project selectedProject = visibleProjects.get(projectChoice);
+        Project selectedProject = filteredProjects.get(projectChoice);
         
         // Get enquiry message
         System.out.println("Enter your enquiry:");
@@ -284,7 +300,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Displays the applicant's enquiries and provides options to manage them.
+     * View and manage enquiries
      */
     private void viewMyEnquiries() {
         List<Enquiry> myEnquiries = applicant.viewMyEnquiries(enquiryRepo);
@@ -323,9 +339,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Handles the process of editing an enquiry.
-     * 
-     * @param myEnquiries List of the applicant's enquiries
+     * Edit an enquiry
      */
     private void editEnquiry(List<Enquiry> myEnquiries) {
         System.out.print("Enter enquiry number to edit: ");
@@ -362,9 +376,7 @@ public class ApplicantUI extends BaseUserUI {
     }
     
     /**
-     * Handles the process of deleting an enquiry.
-     * 
-     * @param myEnquiries List of the applicant's enquiries
+     * Delete an enquiry
      */
     private void deleteEnquiry(List<Enquiry> myEnquiries) {
         System.out.print("Enter enquiry number to delete: ");
