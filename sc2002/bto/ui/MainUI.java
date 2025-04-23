@@ -34,6 +34,14 @@ public class MainUI {
     private static EnquiryRepository enquiryRepo = new EnquiryRepository();
 
     /**
+     * Private constructor to prevent instantiation.
+     * This class uses only static methods.
+     */
+    private MainUI() {
+        // Prevents instantiation
+    }
+
+    /**
      * Main method that starts the application.
      * 
      * @param args Command line arguments (not used)
