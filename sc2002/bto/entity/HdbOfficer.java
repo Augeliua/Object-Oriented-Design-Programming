@@ -1,5 +1,6 @@
 package sc2002.bto.entity;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,6 @@ import sc2002.bto.repository.EnquiryRepository;
  * Represents an HDB Officer in the BTO Management System.
  * This class extends the User class and implements IEnquiryManagement and IApplicationProcessing interfaces.
  * HDB Officers assist in processing applications, booking flats, and handling enquiries.
- * 
  */
 public class HdbOfficer extends User implements IEnquiryManagement, IApplicationProcessing {
     /** The name of the officer */
@@ -62,7 +62,7 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     	this.pendingProject = pendingProject;
     	this.handlingProject = handlingProject;
     	this.registrationStatus = regStatus;
-    	this.registeringManager = null; // Now saved from parameter
+    	this.registeringManager = registeringManager;
     	this.applicationRepository = appRepo;
     	this.enquiryRepository = enqRepo;
     }
@@ -200,6 +200,10 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
             return false;
         }
         
+        // Debug: Print out both flat types to see if there's a mismatch
+        System.out.println("Debug - Application flat type: " + application.getSelectedFlatType());
+        System.out.println("Debug - Requested booking flat type: " + flatType);
+        
         // Verify flat type matches what was applied for
         if (!application.getSelectedFlatType().equals(flatType)) {
             System.out.println("Error: Cannot book a different flat type than what was applied for");
@@ -234,14 +238,81 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     }
     
     /**
-     * Generates a receipt for a successful application.
+     * Saves a receipt to the ReceiptList.csv file.
+     * Creates the file with a header if it doesn't exist and appends the new receipt.
      * 
-     * @param application The application to generate a receipt for
-     * @return The generated receipt
+     * @param receipt The Receipt object to be saved to the file
+     */
+    private void saveReceiptToFile(Receipt receipt) {
+        try {
+            File receiptFile = new File("data/ReceiptList.csv");
+            
+            // Check if file exists, if not create it with header
+            boolean fileExists = receiptFile.exists() && receiptFile.length() > 0;
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(receiptFile, true))) {
+                // Write header if file is new
+                if (!fileExists) {
+                    writer.write("ReceiptID,Name,NRIC,Age,MaritalStatus,ProjectID,Neighborhood,Price,FlatType,BookingDate\n");
+                }
+                
+                // Escape CSV values that might contain commas
+                String escapedName = escapeCSV(receipt.getName());
+                String escapedNRIC = escapeCSV(receipt.getNRIC());
+                String escapedNeighborhood = escapeCSV(receipt.getNeighborhood());
+                
+                // Append the new receipt
+                writer.write(
+                    receipt.getReceiptID() + "," +
+                    escapedName + "," +
+                    escapedNRIC + "," +
+                    receipt.getAge() + "," +
+                    escapeCSV(receipt.getMaritalStatus()) + "," +
+                    escapeCSV(receipt.getProjectID()) + "," +
+                    escapedNeighborhood + "," +
+                    receipt.getPricePerFlat() + "," +
+                    receipt.getFlatType() + "," +
+                    escapeCSV(receipt.getBookingDate()) + "\n"
+                );
+            }
+        } catch (IOException e) {
+            System.err.println("Error saving receipt to file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Escapes special characters in CSV fields to prevent parsing issues.
+     * Wraps the value in quotes if it contains commas, quotes, or newlines.
+     * 
+     * @param value The string to be escaped
+     * @return The CSV-safe escaped string
+     */
+    private String escapeCSV(String value) {
+        if (value == null) return "";
+        
+        // Check if value needs escaping
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            // Replace existing quotes with double quotes
+            value = value.replace("\"", "\"\"");
+            // Wrap in quotes
+            return "\"" + value + "\"";
+        }
+        
+        return value;
+    }
+
+     /**
+     * Generates a receipt for a successful or booked application.
+     * Creates a receipt with applicant and project details, 
+     * prints the receipt, saves it to a file, and updates the application status.
+     * 
+     * @param application The application for which to generate a receipt
+     * @return The generated Receipt object, or null if receipt generation fails
      */
     public Receipt generateReceipt(Application application) {
+        // Validate application status
         if (application == null || 
-        	    !(application.getStatus() == ApplicationStatus.SUCCESSFUL || application.getStatus() == ApplicationStatus.BOOKED)) {
+            !(application.getStatus() == ApplicationStatus.SUCCESSFUL || 
+              application.getStatus() == ApplicationStatus.BOOKED)) {
             System.out.println("Cannot generate receipt: Application must be SUCCESSFUL or BOOKED");
             return null;
         }
@@ -268,12 +339,22 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         // Print receipt details
         receipt.printReceiptDetails();
         
+        // Save receipt to file
+        saveReceiptToFile(receipt);
+        
         // Update application status to BOOKED
         application.updateStatus(ApplicationStatus.BOOKED);
         
         return receipt;
     }
     
+    /**
+     * Processes an application based on its current status.
+     * Verifies that the officer is handling the project associated with the application.
+     * Handles applications differently based on their status (PENDING, SUCCESSFUL, UNSUCCESSFUL, or BOOKED).
+     * 
+     * @param application The application to process
+     */
     @Override
     public void processApplication(Application application) {
         if (application == null) {
@@ -301,6 +382,9 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
                 Applicant applicant = application.getApplicant();
                 FlatType flatType = application.getSelectedFlatType();
                 
+                // Debug: Print the selected flat type before booking
+                System.out.println("Debug - Processing application with flat type: " + flatType);
+                
                 // Use bookFlat to handle the booking process
                 boolean bookingSuccess = bookFlat(applicant, flatType);
                 
@@ -309,7 +393,7 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
                 } else {
                     System.out.println("Application processed: Booking failed");
                 }
-
+    
                 break;
                 
             case UNSUCCESSFUL:
@@ -329,6 +413,13 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         }
     }
     
+    /**
+     * Validates an application against eligibility criteria.
+     * Checks age requirements, marital status restrictions, flat type eligibility,
+     * and availability of units.
+     * 
+     * @param application The application to validate
+     */
     @Override
     public void validateApplication(Application application) {
         if (application == null) {
@@ -374,6 +465,10 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         System.out.println("Application is valid and ready for processing.");
     }
     
+    /**
+     * Updates the status of a batch of applications.
+     * Currently just a placeholder method, actual implementation is done on a per-application basis.
+     */
     @Override
     public void updateApplicationStatus() {
         // This method might be used to update application statuses for all applications
@@ -381,6 +476,12 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         System.out.println("Bulk application status update not implemented.");
     }
     
+    /**
+     * Updates the status of an application.
+     * 
+     * @param application The application to update.
+     * @param newStatus The new status to set.
+     */
     public void updateApplicationStatus(Application application, ApplicationStatus newStatus) {
         if (application == null) {
             System.out.println("Error: Cannot update status of null application");
@@ -397,8 +498,6 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         // Notify based on new status
         if (newStatus == ApplicationStatus.BOOKED) {
             System.out.println("Booking confirmed for applicant: " + application.getApplicant().getName());
-            System.out.println("Generating receipt...");
-            generateReceipt(application);
         }
     }
     
@@ -432,6 +531,12 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Handles an enquiry about a project.
+     * Verifies that the officer is handling the project related to the enquiry.
+     * 
+     * @param e The enquiry to handle
+     */
     @Override
     public void handleEnquiry(Enquiry e) {
         if (e == null) {
@@ -445,11 +550,17 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
             return;
         }
         
-        // e.displayEnquiryDetails(); 
-        // changed to solve error in HdbOfficer: The method displayEnquiryDetails() from the type Enquiry is deprecated
         e.printEnquiryDetails();
     }
     
+    /**
+     * Responds to an enquiry about a project.
+     * Verifies that the officer is handling the project related to the enquiry before responding.
+     * Updates the enquiry status to REPLIED after adding the response.
+     * 
+     * @param e The enquiry to respond to
+     * @param response The response message to add to the enquiry
+     */
     @Override
     public void respondToEnquiry(Enquiry e, String response) {
         if (e == null) {
@@ -509,45 +620,86 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
     }
     
     // Getters and setters
+    /**
+     * Gets the name of this officer.
+     * @return The officer's name.
+     */
     public String getOfficerName() {
         return officerName;
     }
     
+    /**
+     * Sets the name of this officer.
+     * @param officerName The new name for this officer.
+     */
     public void setOfficerName(String officerName) {
         this.officerName = officerName;
     }
     
+    /**
+     * Gets the project this officer is currently handling.
+     * @return The project being handled, or null if none.
+     */
     public Project getHandlingProject() {
         return handlingProject;
     }
     
+    /**
+     * Sets the project this officer is handling.
+     * @param handlingProject The project to handle.
+     */
     public void setHandlingProject(Project handlingProject) {
         this.handlingProject = handlingProject;
     }
     
+    /**
+     * Gets the project this officer has requested to handle.
+     * @return The pending project, or null if none.
+     */
+    public Project getPendingProject() {
+        return pendingProject;
+    }
+    
+    /**
+     * Sets the project this officer is requesting to handle.
+     * @param project The project to request.
+     */
+    public void setPendingProject(Project project) {
+        this.pendingProject = project;
+    }
+    
+    /**
+     * Gets the registration status of this officer.
+     * @return The current OfficerRegistrationStatus.
+     */
     public OfficerRegistrationStatus getRegistrationStatus() {
         return registrationStatus;
     }
     
+    /**
+     * Sets the registration status of this officer.
+     * @param registrationStatus The new registration status.
+     */
     public void setRegistrationStatus(OfficerRegistrationStatus registrationStatus) {
         this.registrationStatus = registrationStatus;
     }
-
-    public void setPendingProject(Project project) {
-    	this.pendingProject = project;
-    }
-    public Project getPendingProject() {
-        return pendingProject;
-    }
-    // Getters and Setters for new field
+    
+    /**
+     * Gets the manager who registered this officer.
+     * @return The registering manager, or null if none.
+     */
     public HdbManager getRegisteringManager() {
         return registeringManager;
     }
-
+    
+    /**
+     * Sets the manager who registered this officer.
+     * @param registeringManager The registering manager.
+     */
     public void setRegisteringManager(HdbManager registeringManager) {
         this.registeringManager = registeringManager;
     }
-
+    
     /**
      * Displays all enquiries for the project handled by this officer.
      */
