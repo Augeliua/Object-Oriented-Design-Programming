@@ -133,36 +133,72 @@ public class ApplicantUI extends BaseUserUI {
      * user experience, even if the user returns to the main menu before completing
      * the application process.
      */
-    private void applyForProject() {
-        // Check if already has a booked flat
-        boolean hasBooked = applicationRepo.getAll().stream()
-            .anyMatch(a -> a.getApplicant().equals(applicant) && a.getStatus() == ApplicationStatus.BOOKED);
-
-        if (hasBooked) {
-            System.out.println("You have already booked a flat. Cannot apply for another.");
+    
+     private void applyForProject() {
+        // New check: block any active application (pending, successful, booked)
+        boolean hasActiveApplication = applicationRepo.getAll().stream()
+            .anyMatch(a ->
+                a.getApplicant().equals(applicant) &&
+                (a.getStatus() == ApplicationStatus.PENDING ||
+                 a.getStatus() == ApplicationStatus.SUCCESSFUL ||
+                 a.getStatus() == ApplicationStatus.BOOKED)
+            );
+    
+        if (hasActiveApplication) {
+            System.out.println("You already have an active application. You cannot apply for another project.");
             return;
         }
-        
-        // Get eligible projects
-        List<Project> eligibleProjects = applicant.viewEligibleProjects(projectRepo);
-        
-        if (eligibleProjects.isEmpty()) {
-            System.out.println("No eligible projects found for your profile.");
-            return;
+    
+        List<Project> baseEligibleProjects = applicant.viewEligibleProjects(projectRepo);
+    
+        while (true) {
+            List<Project> filteredProjects = projectFilter.apply(baseEligibleProjects);
+    
+            if (filteredProjects.isEmpty()) {
+                System.out.println("No projects available for your profile and current filter settings.");
+                return;
+            }
+    
+            displayFilteredProjects("Eligible Projects for Application", filteredProjects);
+    
+            System.out.println("\n===== Filter Options =====");
+            System.out.println("1. Filter by Neighborhood");
+            System.out.println("2. Filter by Flat Type");
+            System.out.println("3. Sort by Field");
+            System.out.println("4. Toggle Sort Order (Current: " + (projectFilter.isAscending() ? "Ascending" : "Descending") + ")");
+            System.out.println("5. Reset Filters");
+            System.out.println("6. Continue to Project Selection");
+            System.out.print("Enter your choice: ");
+    
+            String choice = scanner.nextLine();
+    
+            switch (choice) {
+                case "1":
+                    filterByNeighborhood(baseEligibleProjects);
+                    break;
+                case "2":
+                    filterByFlatType();
+                    break;
+                case "3":
+                    sortByField();
+                    break;
+                case "4":
+                    toggleSortOrder();
+                    break;
+                case "5":
+                    projectFilter.reset();
+                    break;
+                case "6":
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+                    continue;
+            }
+    
+            if (choice.equals("6")) break;
         }
-        
-        // Display eligible projects with filters
-        displayFilteredProjects("Available Projects", eligibleProjects);
-        
-        // Apply filters and get the filtered list
-        List<Project> filteredProjects = projectFilter.apply(eligibleProjects);
-        
-        if (filteredProjects.isEmpty()) {
-            System.out.println("No projects match the current filters.");
-            return;
-        }
-        
-        // Get user selection
+    
+        List<Project> finalProjects = projectFilter.apply(baseEligibleProjects);
         System.out.print("\nSelect a project number: ");
         int projectChoice;
         try {
@@ -171,45 +207,36 @@ public class ApplicantUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
-        if (projectChoice < 0 || projectChoice >= filteredProjects.size()) {
+    
+        if (projectChoice < 0 || projectChoice >= finalProjects.size()) {
             System.out.println("Invalid project selection.");
             return;
         }
-        
-        Project selectedProject = filteredProjects.get(projectChoice);
-        
-        // Get available flat types based on marital status
+    
+        Project selectedProject = finalProjects.get(projectChoice);
         List<FlatType> availableFlatTypes = new ArrayList<>();
-        
-        if (applicant.getMaritalStatus() == MaritalStatus.MARRIED) {
-            // Married applicants can apply for any flat types
-            if (selectedProject.getUnitsAvailable(FlatType.TWO_ROOM) > 0) {
+    
+        if (applicant.getMaritalStatus() == MaritalStatus.MARRIED && applicant.getAge() >= 21) {
+            if (selectedProject.getUnitsAvailable(FlatType.TWO_ROOM) > 0)
                 availableFlatTypes.add(FlatType.TWO_ROOM);
-            }
-            if (selectedProject.getUnitsAvailable(FlatType.THREE_ROOM) > 0) {
+            if (selectedProject.getUnitsAvailable(FlatType.THREE_ROOM) > 0)
                 availableFlatTypes.add(FlatType.THREE_ROOM);
-            }
-        } else {
-            // Single applicants can only apply for 2-room flats
-            if (selectedProject.getUnitsAvailable(FlatType.TWO_ROOM) > 0) {
+        } else if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() >= 35) {
+            if (selectedProject.getUnitsAvailable(FlatType.TWO_ROOM) > 0)
                 availableFlatTypes.add(FlatType.TWO_ROOM);
-            }
         }
-        
+    
         if (availableFlatTypes.isEmpty()) {
             System.out.println("No available flat types for this project.");
             return;
         }
-        
-        // Display available flat types
+    
         System.out.println("\n===== Available Flat Types =====");
         for (int i = 0; i < availableFlatTypes.size(); i++) {
             FlatType type = availableFlatTypes.get(i);
             System.out.println((i + 1) + ". " + type + " (" + selectedProject.getUnitsAvailable(type) + " units available)");
         }
-        
-        // Get user selection
+    
         System.out.print("Select a flat type: ");
         int flatTypeChoice;
         try {
@@ -218,22 +245,20 @@ public class ApplicantUI extends BaseUserUI {
             System.out.println("Invalid input. Please enter a number.");
             return;
         }
-        
+    
         if (flatTypeChoice < 0 || flatTypeChoice >= availableFlatTypes.size()) {
             System.out.println("Invalid flat type selection.");
             return;
         }
-        
+    
         FlatType selectedFlatType = availableFlatTypes.get(flatTypeChoice);
-        
-        // Submit the application
         applicant.submitApplication(selectedProject, selectedFlatType, applicationRepo, projectRepo);
-        
-        System.out.println("Application submitted successfully for " + selectedProject.getProjectName() + 
-                          " with flat type " + selectedFlatType);
+    
+        System.out.println("Application submitted successfully for " + selectedProject.getProjectName() +
+                           " with flat type " + selectedFlatType);
     }
     
-    /**
+     /** 
      * Request withdrawal of application
      */
     private void requestWithdrawal() {
@@ -406,5 +431,13 @@ public class ApplicantUI extends BaseUserUI {
         if (confirm.equalsIgnoreCase("Y")) {
             applicant.deleteEnquiry(selectedEnquiry.getEnquiryId(), enquiryRepo);
         }
+    }
+
+    /**
+     * Toggles the sort order between ascending and descending.
+     * This affects how projects are sorted in the various list views.
+     */
+    protected void toggleSortOrder() {
+        projectFilter.setAscending(!projectFilter.isAscending());
     }
 }
