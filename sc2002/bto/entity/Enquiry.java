@@ -38,27 +38,50 @@ public class Enquiry {
         this.response = null; // No reply yet
     }
 
-    // Getters
+    /**
+     * Gets the unique ID of this enquiry.
+     * @return The enquiry's unique identifier.
+     */
     public String getEnquiryId() { 
         return enquiryId; 
     }
     
+    /**
+     * Gets the project associated with this enquiry.
+     * @return The Project object.
+     */
     public Project getProject() { 
         return project; 
     }
     
+    /**
+     * Gets the applicant who submitted this enquiry.
+     * @return The Applicant object.
+     */
     public Applicant getApplicant() { 
         return applicant; 
     }
     
+    /**
+     * Gets the message content of this enquiry.
+     * @return The enquiry message.
+     */
     public String getMessage() { 
         return message; 
     }
     
+    /**
+     * Gets the response to this enquiry, if any.
+     * @return The response message, or null if no response yet.
+     */
     public String getResponse() { 
         return response; 
     }
     
+    /**
+     * Gets the current status of this enquiry.
+     * @return The current EnquiryStatus (PENDING or REPLIED).
+     */
     public EnquiryStatus getStatus() { 
         return status; 
     }
