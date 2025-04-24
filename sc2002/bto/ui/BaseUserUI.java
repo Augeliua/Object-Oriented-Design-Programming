@@ -2,9 +2,12 @@ package sc2002.bto.ui;
 
 import java.util.List;
 import java.util.Scanner;
+
+import sc2002.bto.entity.Applicant;
 import sc2002.bto.entity.Project;
 import sc2002.bto.entity.User;
 import sc2002.bto.enums.FlatType;
+import sc2002.bto.enums.MaritalStatus;
 import sc2002.bto.repository.ApplicationRepository;
 import sc2002.bto.repository.EnquiryRepository;
 import sc2002.bto.repository.ProjectRepository;
@@ -132,88 +135,43 @@ public abstract class BaseUserUI {
      * @param projects The list of projects to filter and display
      */
     protected void displayFilteredProjects(String title, List<Project> projects) {
-        if (projects.isEmpty()) {
-            System.out.println("No projects available.");
-            return;
-        }
-        
         System.out.println("\n===== " + title + " =====");
-        System.out.println("Current " + projectFilter);
-        
-        // Apply filters
-        List<Project> filteredProjects = projectFilter.apply(projects);
-        
-        if (filteredProjects.isEmpty()) {
-            System.out.println("No projects match your filter criteria.");
-            return;
-        }
-        
-        for (int i = 0; i < filteredProjects.size(); i++) {
-            Project p = filteredProjects.get(i);
-            System.out.println((i + 1) + ". " + p.getProjectName() + " (" + p.getNeighborhood() + ")");
+        System.out.println("Current Filters: " + projectFilter);
+    
+        for (int i = 0; i < projects.size(); i++) {
+            Project p = projects.get(i);
+            System.out.printf("%d. Project %s (%s)%n", i + 1, p.getProjectID(), p.getNeighborhood());
             System.out.println("   Visibility: " + (p.isVisible() ? "Visible" : "Hidden"));
             System.out.println("   Application Period: " + p.getApplicationOpenDate() + " to " + p.getApplicationCloseDate());
             System.out.println("   Available Units:");
-            System.out.println("   - 2-Room: " + p.getTwoRoomUnitsAvailable());
-            System.out.println("   - 3-Room: " + p.getThreeRoomUnitsAvailable());
-            System.out.println();
+    
+            if (currentUser instanceof Applicant) {
+                Applicant applicant = (Applicant) currentUser;
+                MaritalStatus status = applicant.getMaritalStatus();
+                int age = applicant.getAge();
+    
+                if (status == MaritalStatus.MARRIED && age >= 21) {
+                    if (p.getUnitsAvailable(FlatType.TWO_ROOM) > 0)
+                        System.out.println("   - 2-Room: " + p.getUnitsAvailable(FlatType.TWO_ROOM));
+                    if (p.getUnitsAvailable(FlatType.THREE_ROOM) > 0)
+                        System.out.println("   - 3-Room: " + p.getUnitsAvailable(FlatType.THREE_ROOM));
+                } else if (status == MaritalStatus.SINGLE && age >= 35) {
+                    if (p.getUnitsAvailable(FlatType.TWO_ROOM) > 0)
+                        System.out.println("   - 2-Room: " + p.getUnitsAvailable(FlatType.TWO_ROOM));
+                }
+            } else {
+                // fallback for HDB Officer, Manager, etc.
+                for (FlatType type : FlatType.values()) {
+                    int available = p.getUnitsAvailable(type);
+                    if (available > 0) {
+                        System.out.println("   - " + type.toString().replace("_", "-") + ": " + available);
+                    }
+                }
+            }
         }
-        
-        // Show filter options
-        showFilterOptions(projects);
     }
     
-    /**
-     * Displays filter options to the user and processes their selection.
-     * This method presents a menu of filtering and sorting options for projects:
-     * - Filter by neighborhood
-     * - Filter by flat type
-     * - Sort by a selected field
-     * - Toggle sort order between ascending and descending
-     * - Reset all filters to default values
-     * 
-     * The user's selection is processed immediately and the filter settings are updated
-     * accordingly in the projectFilter object, which persists between menu navigations.
-     * 
-     * @param projects The list of projects to extract filter options from (e.g., available neighborhoods)
-     */
-    protected void showFilterOptions(List<Project> projects) {
-        System.out.println("\n===== Filter Options =====");
-        System.out.println("1. Filter by Neighborhood");
-        System.out.println("2. Filter by Flat Type");
-        System.out.println("3. Sort by Field");
-        System.out.println("4. Toggle Sort Order (Current: " + (projectFilter.isAscending() ? "Ascending" : "Descending") + ")");
-        System.out.println("5. Reset Filters");
-        System.out.println("6. Return to Menu");
-        System.out.print("Enter your choice: ");
-        
-        String choice = scanner.nextLine();
-        
-        switch (choice) {
-            case "1":
-                filterByNeighborhood(projects);
-                break;
-            case "2":
-                filterByFlatType();
-                break;
-            case "3":
-                sortByField();
-                break;
-            case "4":
-                projectFilter.setAscending(!projectFilter.isAscending());
-                System.out.println("Sort order set to " + (projectFilter.isAscending() ? "Ascending" : "Descending"));
-                break;
-            case "5":
-                projectFilter.reset();
-                System.out.println("Filters reset to default values.");
-                break;
-            case "6":
-                return;
-            default:
-                System.out.println("Invalid choice.");
-                break;
-        }
-    }
+    
     
     /**
      * Allows the user to filter projects by selecting a specific neighborhood.
@@ -228,7 +186,7 @@ public abstract class BaseUserUI {
      * 
      * @param projects The list of projects to extract available neighborhoods from
      */
-    private void filterByNeighborhood(List<Project> projects) {
+    protected void filterByNeighborhood(List<Project> projects) {
         // Collect all unique neighborhoods
         System.out.println("\n===== Neighborhoods =====");
         java.util.Set<String> neighborhoods = new java.util.HashSet<>();
@@ -276,33 +234,55 @@ public abstract class BaseUserUI {
      * The flat type filter will persist between menu navigations as it's stored
      * in the projectFilter object.
      */
-    private void filterByFlatType() {
+    protected void filterByFlatType() {
         System.out.println("\n===== Flat Types =====");
         System.out.println("1. 2-Room");
         System.out.println("2. 3-Room");
         System.out.println("3. Clear flat type filter");
         System.out.print("Select a flat type: ");
-        
+    
         String choice = scanner.nextLine();
-        
+    
+        if (!(currentUser instanceof Applicant)) {
+            System.out.println("Only applicants can filter by flat type.");
+            return;
+        }
+    
+        Applicant applicant = (Applicant) currentUser;
+        MaritalStatus status = applicant.getMaritalStatus();
+        int age = applicant.getAge();
+    
         switch (choice) {
             case "1":
-                projectFilter.setFlatType(FlatType.TWO_ROOM);
-                System.out.println("Flat type filter set to: 2-Room");
+                if ((status == MaritalStatus.MARRIED && age >= 21) ||
+                    (status == MaritalStatus.SINGLE && age >= 35)) {
+                    projectFilter.setFlatType(FlatType.TWO_ROOM);
+                    System.out.println("Flat type filter set to: 2-Room");
+                } else {
+                    System.out.println("You are not eligible to apply for 2-Room flats.");
+                }
                 break;
+    
             case "2":
-                projectFilter.setFlatType(FlatType.THREE_ROOM);
-                System.out.println("Flat type filter set to: 3-Room");
+                if (status == MaritalStatus.MARRIED && age >= 21) {
+                    projectFilter.setFlatType(FlatType.THREE_ROOM);
+                    System.out.println("Flat type filter set to: 3-Room");
+                } else {
+                    System.out.println("You are not eligible to apply for 3-Room flats.");
+                }
                 break;
+    
             case "3":
                 projectFilter.setFlatType(null);
                 System.out.println("Flat type filter cleared.");
                 break;
+    
             default:
                 System.out.println("Invalid choice.");
                 break;
         }
-    }
+    }       
+
     
     /**
      * Allows the user to select a field for sorting projects.
@@ -321,7 +301,7 @@ public abstract class BaseUserUI {
      * in the projectFilter object. The sort order (ascending/descending) can be
      * toggled separately.
      */
-    private void sortByField() {
+    protected void sortByField() {
         System.out.println("\n===== Sort By =====");
         System.out.println("1. Project Name");
         System.out.println("2. Neighborhood");
