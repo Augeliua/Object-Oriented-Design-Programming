@@ -156,50 +156,136 @@ public class ManagerUI extends BaseUserUI {
     }
 
     /**
-     * Displays all projects with filtering capabilities for the HDB Manager.
-     * This method:
-     * 1. Retrieves all projects from the repository
-     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
-     * 3. Displays the filtered list with options to further refine filters
-     * 
-     * Filter settings persist between menu navigations to maintain a consistent
-     * user experience. Managers can view all projects regardless of visibility
-     * settings, including projects created by other managers.
-     */
-    private void displayAllProjects() {
-        List<Project> allProjects = projectRepo.getAll();
+ * Displays all projects with filtering capabilities for the HDB Manager.
+ * This method:
+ * 1. Retrieves all projects from the repository
+ * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+ * 3. Displays the filtered list with options to further refine filters
+ * 
+ * Filter settings persist between menu navigations to maintain a consistent
+ * user experience. Managers can view all projects regardless of visibility
+ * settings, including projects created by other managers.
+ */
+private void displayAllProjects() {
+    List<Project> allProjects = projectRepo.getAll();
 
-        if (allProjects.isEmpty()) {
-            System.out.println("No projects available.");
+    if (allProjects.isEmpty()) {
+        System.out.println("No projects available.");
+        return;
+    }
+
+    while (true) {
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(allProjects);
+
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
             return;
         }
 
         // Use the base class method to display filtered projects
-        displayFilteredProjects("All Projects", allProjects);
+        displayFilteredProjects("All Projects", filteredProjects);
+
+        System.out.println("\n===== Filter Options =====");
+        System.out.println("1. Filter by Neighborhood");
+        System.out.println("2. Filter by Flat Type");
+        System.out.println("3. Sort by Field");
+        System.out.println("4. Toggle Sort Order (Current: " + (projectFilter.isAscending() ? "Ascending" : "Descending") + ")");
+        System.out.println("5. Reset Filters");
+        System.out.println("6. Back to Main Menu");
+        System.out.print("Enter your choice: ");
+
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                filterByNeighborhood(allProjects);
+                break;
+            case "2":
+                filterByFlatType();
+                break;
+            case "3":
+                sortByField();
+                break;
+            case "4":
+                toggleSortOrder();
+                break;
+            case "5":
+                projectFilter.reset();
+                break;
+            case "6":
+                return;
+            default:
+                System.out.println("Invalid choice.");
+        }
     }
+}
 
     /**
-     * Displays projects created by the current manager with filtering capabilities.
-     * This method:
-     * 1. Retrieves projects created by this manager
-     * 2. Applies the current filter settings (neighborhood, flat type, sorting)
-     * 3. Displays the filtered list with options to further refine filters
-     * 
-     * Filter settings persist between menu navigations to maintain a consistent
-     * user experience. This allows managers to easily find and manage their own
-     * projects, especially when they have created many projects.
-     */
-    private void displayManagerProjects() {
-        List<Project> managerProjects = manager.getProjectsCreated();
+ * Displays projects created by the current manager with filtering capabilities.
+ * This method:
+ * 1. Retrieves projects created by this manager
+ * 2. Applies the current filter settings (neighborhood, flat type, sorting)
+ * 3. Displays the filtered list with options to further refine filters
+ * 
+ * Filter settings persist between menu navigations to maintain a consistent
+ * user experience. This allows managers to easily find and manage their own
+ * projects, especially when they have created many projects.
+ */
+private void displayManagerProjects() {
+    List<Project> managerProjects = manager.getProjectsCreated();
 
-        if (managerProjects.isEmpty()) {
-            System.out.println("You haven't created any projects yet.");
+    if (managerProjects.isEmpty()) {
+        System.out.println("You haven't created any projects yet.");
+        return;
+    }
+
+    while (true) {
+        // Apply filters and get the filtered list
+        List<Project> filteredProjects = projectFilter.apply(managerProjects);
+
+        if (filteredProjects.isEmpty()) {
+            System.out.println("No projects match the current filters.");
             return;
         }
 
         // Use the base class method to display filtered projects
-        displayFilteredProjects("Your Projects", managerProjects);
+        displayFilteredProjects("Your Projects", filteredProjects);
+
+        System.out.println("\n===== Filter Options =====");
+        System.out.println("1. Filter by Neighborhood");
+        System.out.println("2. Filter by Flat Type");
+        System.out.println("3. Sort by Field");
+        System.out.println("4. Toggle Sort Order (Current: " + (projectFilter.isAscending() ? "Ascending" : "Descending") + ")");
+        System.out.println("5. Reset Filters");
+        System.out.println("6. Back to Main Menu");
+        System.out.print("Enter your choice: ");
+
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                filterByNeighborhood(managerProjects);
+                break;
+            case "2":
+                filterByFlatType();
+                break;
+            case "3":
+                sortByField();
+                break;
+            case "4":
+                toggleSortOrder();
+                break;
+            case "5":
+                projectFilter.reset();
+                break;
+            case "6":
+                return;
+            default:
+                System.out.println("Invalid choice.");
+        }
     }
+}
 
     /**
      * Handles the process of creating a new project.
@@ -723,5 +809,13 @@ public class ManagerUI extends BaseUserUI {
         enquiryRepo.update(selectedEnquiry);
 
         System.out.println("Response submitted successfully.");
+    }
+
+    /**
+     * Toggles the sort order between ascending and descending.
+     * This affects how projects are sorted in the various list views.
+     */
+    protected void toggleSortOrder() {
+        projectFilter.setAscending(!projectFilter.isAscending());
     }
 }
