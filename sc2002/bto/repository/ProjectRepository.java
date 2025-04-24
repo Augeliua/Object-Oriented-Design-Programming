@@ -7,9 +7,8 @@ import sc2002.bto.entity.Project;
 import sc2002.bto.interfaces.IRepository;
 
 /**
- * Repository for managing Project entities in the BTO system.
- * Provides methods to add, retrieve, update, and delete project records.
- * 
+ * Constructs a new Project Repository instance.
+ * Initializes an empty collection to store items.
  */
 public class ProjectRepository implements IRepository<Project> {
     /** In-memory storage of project records */
