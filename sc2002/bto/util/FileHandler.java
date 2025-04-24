@@ -46,13 +46,13 @@ public class FileHandler {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     /**
-     * Loads users from files or creates default users if file loading fails.
+     * Loads all data from files into the system repositories.
      * 
-     * @param userRepo Repository for user data
-     * @param applicationRepo Repository for application data
-     * @param enquiryRepo Repository for enquiry data
-     * @return The number of users loaded
-     * @throws IOException If an error occurs while reading the file
+     * @param userRepo    The user repository to populate
+     * @param projectRepo The project repository to populate
+     * @param applicationRepo The application repository to populate
+     * @param enquiryRepo The enquiry repository to populate
+     * @return true if loading was successful, false otherwise
      */
     public static boolean loadAllData(UserRepository userRepo, ProjectRepository projectRepo,
             ApplicationRepository applicationRepo, EnquiryRepository enquiryRepo) {
@@ -95,6 +95,14 @@ public class FileHandler {
         }
     }
 
+    /**
+     * Ensures that the data directory exists for storing files.
+     * Creates the directory if it doesn't already exist.
+     * 
+     * @param directoryPath The path to the data directory
+     * @return true if the directory exists or was successfully created, false
+     *         otherwise
+     */
     private static void ensureDataDirectoryExists() throws IOException {
         File dataDir = new File(DATA_DIR);
         if (!dataDir.exists()) {
@@ -111,15 +119,15 @@ public class FileHandler {
      */
     private static void ensureAllFilesExist() throws IOException {
         String[] files = {
-            APPLICANT_FILE, MANAGER_FILE, OFFICER_FILE, PROJECT_FILE,
-            APPLICATION_FILE, ENQUIRY_FILE, RECEIPT_FILE
+                APPLICANT_FILE, MANAGER_FILE, OFFICER_FILE, PROJECT_FILE,
+                APPLICATION_FILE, ENQUIRY_FILE, RECEIPT_FILE
         };
-        
+
         for (String file : files) {
             File f = new File(file);
             if (!f.exists()) {
                 f.createNewFile();
-                
+
                 // Write headers to the new file
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
                     switch (file) {
@@ -134,17 +142,21 @@ public class FileHandler {
                             writer.write("ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus\n");
                             break;
                         case PROJECT_FILE:
-                            writer.write("ProjectID,ProjectName,Neighborhood,FlatTypes,FloorCount,PricePerFlat,ThresholdPrice," +
-                                        "OpenDate,CloseDate,Visible,OfficerSlots,TwoRoomUnits,ThreeRoomUnits,ManagerInCharge\n");
+                            writer.write(
+                                    "ProjectID,ProjectName,Neighborhood,FlatTypes,FloorCount,PricePerFlat,ThresholdPrice,"
+                                            +
+                                            "OpenDate,CloseDate,Visible,OfficerSlots,TwoRoomUnits,ThreeRoomUnits,ManagerInCharge\n");
                             break;
                         case APPLICATION_FILE:
-                            writer.write("ApplicationID,ApplicantID,ProjectID,ApplicationDate,Status,FlatType,WithdrawalRequested\n");
+                            writer.write(
+                                    "ApplicationID,ApplicantID,ProjectID,ApplicationDate,Status,FlatType,WithdrawalRequested\n");
                             break;
                         case ENQUIRY_FILE:
                             writer.write("EnquiryID,ProjectID,ApplicantID,Message,Response,Status\n");
                             break;
                         case RECEIPT_FILE:
-                            writer.write("ReceiptID,Name,NRIC,Age,MaritalStatus,ProjectID,Neighborhood,Price,FlatType,BookingDate\n");
+                            writer.write(
+                                    "ReceiptID,Name,NRIC,Age,MaritalStatus,ProjectID,Neighborhood,Price,FlatType,BookingDate\n");
                             break;
                     }
                 }
@@ -153,7 +165,12 @@ public class FileHandler {
     }
 
     /**
-     * Load users (applicants, managers, officers) from CSV files
+     * Loads users from files into the user repository.
+     * 
+     * @param userRepo        The user repository to populate
+     * @param applicationRepo The application repository (for officers)
+     * @param enquiryRepo     The enquiry repository (for officers)
+     * @return The number of users loaded
      */
     public static int loadUsers(UserRepository userRepo, ApplicationRepository applicationRepo,
             EnquiryRepository enquiryRepo) {
@@ -263,60 +280,62 @@ public class FileHandler {
     /**
      * Load officers from CSV file
      */
-    private static int loadOfficers(UserRepository userRepo, 
-                               ApplicationRepository appRepo, 
-                               EnquiryRepository enqRepo) throws IOException {
-    int count = 0;
-    File file = new File(OFFICER_FILE);
-    
-    if (!file.exists() || file.length() == 0) {
-        return 0;
-    }
-    
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        // Skip header
-        String header = br.readLine();
-        if (header == null) return 0;
-        
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(",");
-            if (data.length < 6) continue;  // Need at least 6 fields now
-            
-            String id = data[0].trim();
-            String name = data[1].trim();
-            String password = data[2].trim();
-            int age = Integer.parseInt(data[3].trim());
-            MaritalStatus status = data[4].trim().equalsIgnoreCase("MARRIED") ? 
-                                   MaritalStatus.MARRIED : MaritalStatus.SINGLE;
-            
-            // Project ID (might be empty)
-            String handlingProjectID = "";
-            if (data.length > 5) {
-                handlingProjectID = data[5].trim();
-            }
-            
-            // Registration status
-            OfficerRegistrationStatus regStatus = OfficerRegistrationStatus.PENDING;
-            if (data.length > 6) {
-                String statusStr = data[6].trim();
-                if (statusStr.equalsIgnoreCase("APPROVED")) {
-                    regStatus = OfficerRegistrationStatus.APPROVED;
-                } else if (statusStr.equalsIgnoreCase("REJECTED")) {
-                    regStatus = OfficerRegistrationStatus.REJECTED;
-                }
-            }
-            
-            // Create officer without project reference (will be set later)
-            HdbOfficer officer = new HdbOfficer(id, name, password, age, status, name, 
-                                               null, null, regStatus, null, appRepo, enqRepo);
-            userRepo.add(officer);
-            count++;
+    private static int loadOfficers(UserRepository userRepo,
+            ApplicationRepository appRepo,
+            EnquiryRepository enqRepo) throws IOException {
+        int count = 0;
+        File file = new File(OFFICER_FILE);
+
+        if (!file.exists() || file.length() == 0) {
+            return 0;
         }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            // Skip header
+            String header = br.readLine();
+            if (header == null)
+                return 0;
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length < 6)
+                    continue; // Need at least 6 fields now
+
+                String id = data[0].trim();
+                String name = data[1].trim();
+                String password = data[2].trim();
+                int age = Integer.parseInt(data[3].trim());
+                MaritalStatus status = data[4].trim().equalsIgnoreCase("MARRIED") ? MaritalStatus.MARRIED
+                        : MaritalStatus.SINGLE;
+
+                // Project ID (might be empty)
+                String handlingProjectID = "";
+                if (data.length > 5) {
+                    handlingProjectID = data[5].trim();
+                }
+
+                // Registration status
+                OfficerRegistrationStatus regStatus = OfficerRegistrationStatus.PENDING;
+                if (data.length > 6) {
+                    String statusStr = data[6].trim();
+                    if (statusStr.equalsIgnoreCase("APPROVED")) {
+                        regStatus = OfficerRegistrationStatus.APPROVED;
+                    } else if (statusStr.equalsIgnoreCase("REJECTED")) {
+                        regStatus = OfficerRegistrationStatus.REJECTED;
+                    }
+                }
+
+                // Create officer without project reference (will be set later)
+                HdbOfficer officer = new HdbOfficer(id, name, password, age, status, name,
+                        null, null, regStatus, null, appRepo, enqRepo);
+                userRepo.add(officer);
+                count++;
+            }
+        }
+
+        return count;
     }
-    
-    return count;
-}
 
     /**
      * Load projects from CSV file
@@ -544,7 +563,13 @@ public class FileHandler {
     }
 
     /**
-     * Save all data to CSV files
+     * Saves all data from the system repositories to files.
+     * 
+     * @param userRepo    The user repository to save
+     * @param projectRepo The project repository to save
+     * @param appRepo     The application repository to save
+     * @param enquiryRepo The enquiry repository to save
+     * @return true if saving was successful, false otherwise
      */
     public static boolean saveAllData(UserRepository userRepo, ProjectRepository projectRepo,
             ApplicationRepository appRepo, EnquiryRepository enquiryRepo) {
@@ -639,32 +664,32 @@ public class FileHandler {
     private static void saveOfficers(UserRepository userRepo) throws IOException {
         List<User> users = userRepo.getAll();
         List<HdbOfficer> officers = new ArrayList<>();
-        
+
         // Filter to get only officers
         for (User user : users) {
             if (user instanceof HdbOfficer) {
                 officers.add((HdbOfficer) user);
             }
         }
-        
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(OFFICER_FILE))) {
             // Write header
             writer.write("ID,Name,Password,Age,MaritalStatus,HandlingProjectID,RegistrationStatus\n");
-            
+
             // Write data
             for (HdbOfficer officer : officers) {
-                String handlingProjectID = (officer.getHandlingProject() != null) ? 
-                                           officer.getHandlingProject().getProjectID() : "";
-                
+                String handlingProjectID = (officer.getHandlingProject() != null)
+                        ? officer.getHandlingProject().getProjectID()
+                        : "";
+
                 writer.write(
-                    officer.getId() + "," +
-                    officer.getName() + "," +
-                    officer.getPassword() + "," +
-                    officer.getAge() + "," +
-                    officer.getMaritalStatus() + "," +
-                    handlingProjectID + "," +
-                    officer.getRegistrationStatus() + "\n"
-                );
+                        officer.getId() + "," +
+                                officer.getName() + "," +
+                                officer.getPassword() + "," +
+                                officer.getAge() + "," +
+                                officer.getMaritalStatus() + "," +
+                                handlingProjectID + "," +
+                                officer.getRegistrationStatus() + "\n");
             }
         }
     }
@@ -772,9 +797,9 @@ public class FileHandler {
     /**
      * Creates default users for demonstration purposes.
      * 
-     * @param userRepo Repository for user data
+     * @param userRepo        Repository for user data
      * @param applicationRepo Repository for application data
-     * @param enquiryRepo Repository for enquiry data
+     * @param enquiryRepo     Repository for enquiry data
      * @return The number of users created
      */
 
