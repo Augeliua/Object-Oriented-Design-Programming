@@ -44,36 +44,67 @@ public class Applicant extends User {
         this.incomeRange = incomeRange;
     }
     
-    //Getters
+    /**
+     * Gets the applicant's full name.
+     * @return The full name of the applicant.
+     */
     public String getApplicantName() {
         return applicantName;
     }
 
+    /**
+     * Gets the income range of the applicant.
+     * @return The income range as a Double value.
+     */
     public Double getIncomeRange() {
         return incomeRange;
     }
 
+    /**
+     * Gets the flat type that the applicant has booked, if any.
+     * @return The booked flat type, or null if no flat has been booked.
+     */
     public FlatType getBookedFlat() {
         return bookedFlat;
     }
+
+    /**
+     * Gets the project that the applicant has booked, if any.
+     * @return The booked project, or null if no project has been booked.
+     */
 
     public Project getBookedProject() {
         return bookedProject;
     }
 
-    //Setters
+    /**
+     * Sets the applicant's name.
+     * @param applicantName The new name for the applicant.
+     */
     public void setApplicantName(String applicantName) {
         this.applicantName = applicantName;
     }
 
+    /**
+     * Sets the applicant's income range.
+     * @param incomeRange The new income range for the applicant.
+     */
     public void setIncomeRange(Double incomeRange) {
         this.incomeRange = incomeRange;
     }
 
+    /**
+     * Sets the flat type that the applicant has booked.
+     * @param bookedFlat The flat type booked by the applicant.
+     */
     public void setBookedFlat(FlatType bookedFlat) {
         this.bookedFlat = bookedFlat;
     }
 
+    /**
+     * Sets the project that the applicant has booked.
+     * @param bookedProject The project booked by the applicant.
+     */
     public void setBookedProject(Project bookedProject) {
         this.bookedProject = bookedProject;
     }
@@ -102,12 +133,6 @@ public class Applicant extends User {
                     project.getUnitsAvailable(FlatType.THREE_ROOM) > 0) {
                     eligibleProjects.add(project);
                     
-                    // print number of avail units
-                    System.out.println("Project: " + project.getProjectID());
-                    System.out.println("Available Units:");
-                    System.out.println("- TWO_ROOM: " + project.getUnitsAvailable(FlatType.TWO_ROOM));
-                    System.out.println("- THREE_ROOM: " + project.getUnitsAvailable(FlatType.THREE_ROOM));
-                    System.out.println();
                 }
                 
             } else if (status == MaritalStatus.SINGLE && age >= 35) {
@@ -115,11 +140,6 @@ public class Applicant extends User {
                 if (project.getUnitsAvailable(FlatType.TWO_ROOM) > 0) {
                     eligibleProjects.add(project);
                     
-                    // print number of avail units
-                    System.out.println("Project: " + project.getProjectID());
-                    System.out.println("Available Units:");
-                    System.out.println("- TWO_ROOM: " + project.getUnitsAvailable(FlatType.TWO_ROOM));
-                    System.out.println();
                 }
             }
         
