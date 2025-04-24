@@ -78,115 +78,226 @@ public class Project {
         this.threeRoomUnitsAvailable = threeRoomUnitsAvailable;
     }
     
-    // Getters and setters
+    /**
+     * Gets the unique ID of this project.
+     * @return The project's unique identifier.
+     */
     public String getProjectID() {
         return projectID;
     }
     
+    /**
+     * Sets the project ID.
+     * @param projectID The new ID for this project.
+     */
     public void setProjectID(String projectID) {
         this.projectID = projectID;
     }
     
+    /**
+     * Gets the name of this project.
+     * @return The project name.
+     */
     public String getProjectName() {
         return projectName;
     }
     
+    /**
+     * Sets the name of this project.
+     * @param projectName The new name for this project.
+     */
     public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
     
+    /**
+     * Gets the neighborhood where this project is located.
+     * @return The neighborhood name.
+     */
     public String getNeighborhood() {
         return neighborhood;
     }
     
+    /**
+     * Sets the neighborhood for this project.
+     * @param neighborhood The new neighborhood location.
+     */
     public void setNeighborhood(String neighborhood) {
         this.neighborhood = neighborhood;
     }
     
+    /**
+     * Gets the flat types available in this project.
+     * @return An array of FlatType values.
+     */
     public FlatType[] getFlatType() {
         return flatType;
     }
     
+    /**
+     * Sets the flat types available in this project.
+     * @param flatType An array of FlatType values.
+     */
     public void setFlatType(FlatType[] flatType) {
         this.flatType = flatType;
     }
     
+    /**
+     * Gets the number of floors in the project buildings.
+     * @return The floor count.
+     */
     public double getFloorCount() {
         return floorCount;
     }
     
+    /**
+     * Sets the number of floors in the project buildings.
+     * @param floorCount The new floor count.
+     */
     public void setFloorCount(double floorCount) {
         this.floorCount = floorCount;
     }
     
+    /**
+     * Gets the price per flat in this project.
+     * @return The price per flat.
+     */
     public double getPricePerFlat() {
         return pricePerFlat;
     }
     
+    /**
+     * Sets the price per flat in this project.
+     * @param pricePerFlat The new price per flat.
+     */
     public void setPricePerFlat(double pricePerFlat) {
         this.pricePerFlat = pricePerFlat;
     }
     
+    /**
+     * Gets the threshold price for this project.
+     * @return The threshold price.
+     */
     public double getThresholdPrice() {
         return thresholdPrice;
     }
     
+    /**
+     * Sets the threshold price for this project.
+     * @param thresholdPrice The new threshold price.
+     */
     public void setThresholdPrice(double thresholdPrice) {
         this.thresholdPrice = thresholdPrice;
     }
     
+    /**
+     * Gets the application opening date for this project.
+     * @return The opening date as a string.
+     */
     public String getApplicationOpenDate() {
         return applicationOpenDate;
     }
     
+    /**
+     * Sets the application opening date for this project.
+     * @param applicationOpenDate The new opening date.
+     */
     public void setApplicationOpenDate(String applicationOpenDate) {
         this.applicationOpenDate = applicationOpenDate;
     }
     
+    /**
+     * Gets the application closing date for this project.
+     * @return The closing date as a string.
+     */
     public String getApplicationCloseDate() {
         return applicationCloseDate;
     }
     
+    /**
+     * Sets the application closing date for this project.
+     * @param applicationCloseDate The new closing date.
+     */
     public void setApplicationCloseDate(String applicationCloseDate) {
         this.applicationCloseDate = applicationCloseDate;
     }
     
+    /**
+     * Checks if this project is visible to applicants.
+     * @return true if the project is visible, false otherwise.
+     */
     public boolean isVisible() {
         return isVisible;
     }
-    
+
+    /**
+     * Sets the visibility status of this project.
+     * @param visible The new visibility status.
+     */
     public void setVisible(boolean visible) {
         isVisible = visible;
     }
-    
+
+    /**
+     * Gets the number of available slots for HDB officers.
+     * @return The number of available officer slots.
+     */
     public int getAvailableOfficerSlots() {
         return availableOfficerSlots;
     }
-    
+
+    /**
+     * Sets the number of available slots for HDB officers.
+     * @param availableOfficerSlots The new number of available officer slots.
+     */
     public void setAvailableOfficerSlots(int availableOfficerSlots) {
         this.availableOfficerSlots = availableOfficerSlots;
     }
-    
+
+    /**
+     * Gets the number of available 2-room units.
+     * @return The number of available 2-room units.
+     */
     public int getTwoRoomUnitsAvailable() {
         return twoRoomUnitsAvailable;
     }
-    
+
+    /**
+     * Sets the number of available 2-room units.
+     * @param twoRoomUnitsAvailable The new number of available 2-room units.
+     */
     public void setTwoRoomUnitsAvailable(int twoRoomUnitsAvailable) {
         this.twoRoomUnitsAvailable = twoRoomUnitsAvailable;
     }
-    
+
+    /**
+     * Gets the number of available 3-room units.
+     * @return The number of available 3-room units.
+     */
     public int getThreeRoomUnitsAvailable() {
         return threeRoomUnitsAvailable;
     }
-    
+
+    /**
+     * Sets the number of available 3-room units.
+     * @param threeRoomUnitsAvailable The new number of available 3-room units.
+     */
     public void setThreeRoomUnitsAvailable(int threeRoomUnitsAvailable) {
         this.threeRoomUnitsAvailable = threeRoomUnitsAvailable;
     }
-    
+
+    /**
+     * Gets the manager in charge of this project.
+     * @return The name of the manager in charge.
+     */
     public String getManagerInCharge() {
         return managerInCharge;
     }
-    
+
+    /**
+     * Sets the manager in charge of this project.
+     * @param managerInCharge The name of the new manager in charge.
+     */
     public void setManagerInCharge(String managerInCharge) {
         this.managerInCharge = managerInCharge;
     }
