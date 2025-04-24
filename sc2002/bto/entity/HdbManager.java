@@ -361,7 +361,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         return report;
     }
     
-    // Methods from IProjectManagement interface
+    /**
+      * Reviews a project for approval.
+      * Checks if the project is created by this manager before processing.
+      * 
+      * @param p The project to review
+      */
     @Override
     public void reviewProject(Project p) {
         if (projectsCreated.contains(p)) {
@@ -372,6 +377,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
     
+    /**
+ * Approves a project after review.
+ * Checks if the project is created by this manager before approving.
+ * 
+ * @param p The project to approve
+ */
     @Override
     public void approveProject(Project p) {
         if (projectsCreated.contains(p)) {
@@ -414,7 +425,12 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         
         createProject(project, projectRepo);
     }
-
+    /**
+ * Handles an enquiry about a project.
+ * Verifies that the enquiry is for a project managed by this manager.
+ * 
+ * @param e The enquiry to handle
+ */
     @Override
     public void handleEnquiry(Enquiry e) {
         if (e == null) {
@@ -433,7 +449,13 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         System.out.println("Handling enquiry: " + e.getEnquiryId());
         // Additional handling logic
     }
-    
+    /**
+ * Responds to an enquiry about a project.
+ * Verifies that the enquiry is for a project managed by this manager before responding.
+ * 
+ * @param e The enquiry to respond to
+ * @param response The response message to be added to the enquiry
+ */
     @Override
     public void respondToEnquiry(Enquiry e, String response) {
         if (e == null) {
@@ -455,7 +477,10 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
     
     // Methods to handle additional requirements
     
-    // View projects created by this manager only
+    /**
+     * Gets a list of projects created by this manager.
+     * @return A list of projects created by this manager.
+     */
     public List<Project> viewMyProjects() {
         return new ArrayList<>(projectsCreated);
     }
@@ -488,7 +513,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         application.clearWithdrawalRequest(); // clears the flag
     }
     
-    // View all pending HDB Officer registrations
+    /**
+     * Gets a list of HDB officers with pending registrations.
+     * @param allOfficers The complete list of HDB officers.
+     * @return A list of officers with pending registrations for projects managed by this manager.
+     */
     public List<HdbOfficer> viewPendingOfficerRegistrations(List<HdbOfficer> allOfficers) {
         return allOfficers.stream()
                 .filter(o -> o.getHandlingProject() != null && 
@@ -498,7 +527,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
                 .collect(Collectors.toList());
     }
     
-    // View all approved HDB Officer registrations
+    /**
+     * Gets a list of HDB officers with approved registrations.
+     * @param allOfficers The complete list of HDB officers.
+     * @return A list of officers with approved registrations for projects managed by this manager.
+     */
     public List<HdbOfficer> viewApprovedOfficerRegistrations(List<HdbOfficer> allOfficers) {
         return allOfficers.stream()
                 .filter(o -> o.getHandlingProject() != null && 
@@ -508,13 +541,19 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
                 .collect(Collectors.toList());
     }
     
-    // View all enquiries for all projects
+    /**
+     * Gets all enquiries across all projects.
+     * @param enquiryRepo The repository containing all enquiries.
+     * @return A list of all enquiries.
+     */
     public List<Enquiry> getAllEnquiries(EnquiryRepository enquiryRepo) {
         return enquiryRepo.getAll();
     }
     
-    // Print all enquiries for all projects
-    // added to solve error in ManagerUI: The method printAllEnquiries(EnquiryRepository) is undefined for the type HdbManager
+    /**
+     * Prints all enquiries to the console.
+     * @param enquiryRepo The repository containing all enquiries.
+     */
     public void printAllEnquiries(EnquiryRepository enquiryRepo) {
         List<Enquiry> enquiries = getAllEnquiries(enquiryRepo);
     
@@ -532,7 +571,11 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
         }
     }
 
-    // View enquiries for projects managed by this manager
+    /**
+     * Gets enquiries for projects managed by this manager.
+     * @param enquiryRepo The repository containing all enquiries.
+     * @return A list of enquiries for projects managed by this manager.
+     */
     public List<Enquiry> getMyProjectsEnquiries(EnquiryRepository enquiryRepo) {
         return enquiryRepo.getAll().stream()
                 .filter(e -> e.getProject() != null && 
@@ -541,8 +584,10 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
                 .collect(Collectors.toList());
     }
 
-    // print enquiries for projects managed by this manager
-    // added to solve this error in ManagerUI: The method printMyProjectsEnquiries(EnquiryRepository) is undefined for the type HdbManager
+    /**
+     * Prints enquiries for projects managed by this manager to the console.
+     * @param enquiryRepo The repository containing all enquiries.
+     */
     public void printMyProjectsEnquiries(EnquiryRepository enquiryRepo) {
         List<Enquiry> enquiries = getMyProjectsEnquiries(enquiryRepo);
     
@@ -574,19 +619,34 @@ public class HdbManager extends Applicant implements IProjectManagement, IEnquir
             currentDate.before(parseDate(p.getApplicationCloseDate())));
     }
     
-    // Getters and setters
+    /**
+     * Gets the name of this manager.
+     * @return The manager's name.
+     */
     public String getManagerName() {
         return managerName;
     }
 
+    /**
+     * Sets the name of this manager.
+     * @param managerName The new name for this manager.
+     */
     public void setManagerName(String managerName) {
         this.managerName = managerName;
     }
 
+    /**
+     * Gets the list of projects created by this manager.
+     * @return A list of projects created by this manager.
+     */
     public List<Project> getProjectsCreated() {
         return projectsCreated;
     }
 
+    /**
+     * Sets the list of projects created by this manager.
+     * @param projectsCreated The new list of projects.
+     */
     public void setProjectsCreated(List<Project> projectsCreated) {
         this.projectsCreated = projectsCreated;
     }
