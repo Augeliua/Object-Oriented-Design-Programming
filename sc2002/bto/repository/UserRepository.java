@@ -5,9 +5,8 @@ import java.util.List;
 import sc2002.bto.entity.User;
 import sc2002.bto.interfaces.IRepository;
 /**
- * Repository for managing User entities in the BTO system.
- * Provides methods to add, retrieve, update, and delete user records.
- * 
+ * Constructs a new User Repository instance.
+ * Initializes an empty collection to store items.
  */
 public class UserRepository implements IRepository<User> {
     /** In-memory storage of user records */
