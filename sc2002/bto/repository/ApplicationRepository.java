@@ -8,9 +8,8 @@ import sc2002.bto.entity.Application;
 import sc2002.bto.interfaces.IRepository;
 
 /**
- * Repository for managing Application entities in the BTO system.
- * Provides methods to add, retrieve, update, and delete application records.
- * 
+ * Constructs a new Application Repository instance.
+ * Initializes an empty collection to store items.
  */
 public class ApplicationRepository implements IRepository<Application> {
     /** In-memory storage of application records */
