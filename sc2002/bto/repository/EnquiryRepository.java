@@ -7,9 +7,8 @@ import sc2002.bto.entity.Enquiry;
 import sc2002.bto.entity.Project;
 import sc2002.bto.interfaces.IRepository;
 /**
- * Repository for managing Enquiry entities in the BTO system.
- * Provides methods to add, retrieve, update, and delete enquiry records.
- * 
+ * Constructs a new Enquiry Repository instance.
+ * Initializes an empty collection to store items.
  */
 public class EnquiryRepository implements IRepository<Enquiry> {
     /** In-memory storage of enquiry records */
