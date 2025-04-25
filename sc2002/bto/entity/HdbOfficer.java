@@ -171,7 +171,6 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
      */
     public boolean bookFlat(Applicant applicant, FlatType flatType) {
         if (applicant == null || flatType == null) {
-            System.out.println("Error: Applicant and flat type cannot be null");
             return false;
         }
         
@@ -183,12 +182,10 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         } else if (flatType == FlatType.THREE_ROOM) {
             availableUnits = handlingProject.getThreeRoomUnitsAvailable();
         } else {
-            System.out.println("Error: Unsupported flat type: " + flatType);
             return false;
         }
         
         if (availableUnits <= 0) {
-            System.out.println("Error: No units available for flat type: " + flatType);
             return false;
         }
         
@@ -196,23 +193,16 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         Application application = findApplicationByApplicant(applicant, handlingProject);
         
         if (application == null) {
-            System.out.println("Error: No application found for this applicant and project");
             return false;
         }
         
-        // Debug: Print out both flat types to see if there's a mismatch
-        System.out.println("Debug - Application flat type: " + application.getSelectedFlatType());
-        System.out.println("Debug - Requested booking flat type: " + flatType);
-        
         // Verify flat type matches what was applied for
         if (!application.getSelectedFlatType().equals(flatType)) {
-            System.out.println("Error: Cannot book a different flat type than what was applied for");
             return false;
         }
         
         // Verify application status is SUCCESSFUL before booking
         if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
-            System.out.println("Error: Application must be SUCCESSFUL before booking");
             return false;
         }
         
@@ -229,10 +219,6 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
         
         // Update application status to BOOKED
         application.updateStatus(ApplicationStatus.BOOKED);
-        
-        System.out.println("Flat successfully booked for applicant: " + applicant.getApplicantName());
-        System.out.println("Flat type: " + flatType);
-        System.out.println("Remaining units of this type: " + (availableUnits - 1));
         
         return true;
     }
@@ -381,9 +367,6 @@ public class HdbOfficer extends User implements IEnquiryManagement, IApplication
                 // Process booking for approved application
                 Applicant applicant = application.getApplicant();
                 FlatType flatType = application.getSelectedFlatType();
-                
-                // Debug: Print the selected flat type before booking
-                System.out.println("Debug - Processing application with flat type: " + flatType);
                 
                 // Use bookFlat to handle the booking process
                 boolean bookingSuccess = bookFlat(applicant, flatType);
